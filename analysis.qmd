@@ -3,9 +3,11 @@ title: "Analysis"
 format:
   html:
     theme: cosmo
-    code-fold: true
-    toc: true
+    code-fold: show
+    code-tools: false
+    toc: false
     toc-depth: 1
+include-in-header: expand-all.html
 ---
 
 
@@ -14,7 +16,7 @@ library(DBI)
 library(duckdb)
 library(readxl)
 
-con <- dbConnect(duckdb::duckdb(), dbdir = "telemundo.duckdb")
+con <- dbConnect(duckdb::duckdb(), dbdir = ":memory:")
 
 # Enable ICU (required in some macOS environments)
 dbExecute(con, "INSTALL icu;")
@@ -84,15 +86,11 @@ AND
 
 ## SQL (30-day retention for Spanish-early cohort)
 ```{sql connection=con}
--- selecting user and signup date
+CREATE OR REPLACE TABLE retention_early_group_30d AS
 WITH base_users AS (
-  SELECT
-    user_id,
-    CAST(signup_date AS DATE) AS signup_date
+  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
   FROM users
 ),
-
--- streaming events left join content by content id
 events_enriched AS (
   SELECT
     e.user_id,
@@ -103,81 +101,135 @@ events_enriched AS (
   JOIN content c
     ON e.content_id = c.content_id
 ),
-
-spanish_early_flag AS (
+early_language_flags AS (
   SELECT
     b.user_id,
     b.signup_date,
-    CASE WHEN COUNT(ev.user_id) > 0 THEN 1 ELSE 0 END AS spanish_early
+    MAX(CASE
+      WHEN ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
+       AND ev.minutes_watched >= 2 AND ev.language = 'Spanish'
+      THEN 1 ELSE 0 END) AS spanish_early,
+    MAX(CASE
+      WHEN ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
+       AND ev.minutes_watched >= 2 AND ev.language = 'English'
+      THEN 1 ELSE 0 END) AS english_early
   FROM base_users b
   LEFT JOIN events_enriched ev
     ON ev.user_id = b.user_id
-   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
-   AND ev.language = 'Spanish'
-   AND ev.minutes_watched >= 2
   GROUP BY 1,2
 ),
-
+early_grouped AS (
+  SELECT
+    user_id,
+    signup_date,
+    CASE
+      WHEN spanish_early = 1 AND english_early = 0 THEN 'Spanish Early Only'
+      WHEN spanish_early = 0 AND english_early = 1 THEN 'English Early Only'
+      WHEN spanish_early = 1 AND english_early = 1 THEN 'Both Languages Early'
+      ELSE 'No Early Engagement'
+    END AS early_group
+  FROM early_language_flags
+),
 ret30 AS (
   SELECT
-    f.user_id,
-    f.spanish_early,
+    e.early_group,
     CASE
-      WHEN s.subscription_start <= f.signup_date + INTERVAL 30 DAY
-       AND (s.subscription_end IS NULL OR s.subscription_end > f.signup_date + INTERVAL 30 DAY)
+      WHEN s.subscription_start <= e.signup_date + INTERVAL 30 DAY
+       AND (s.subscription_end IS NULL OR s.subscription_end > e.signup_date + INTERVAL 30 DAY)
       THEN 1 ELSE 0
     END AS retained_30d
-  FROM spanish_early_flag f
+  FROM early_grouped e
   LEFT JOIN subscriptions s
-    ON s.user_id = f.user_id
+    ON s.user_id = e.user_id
 )
-
 SELECT
-  spanish_early,
+  early_group,
   COUNT(*) AS users,
-  AVG(retained_30d) AS retention_30d
+  ROUND(AVG(retained_30d), 4) AS retention_30d
 FROM ret30
 GROUP BY 1
-ORDER BY 1;
+ORDER BY users DESC;
+
 ```
+
+```{sql connection=con}
+#| eval: false
+#| include: false
+SHOW TABLES;
+COPY retention_early_group_30d
+TO 'data/clean_retention_early_group_30d.csv'
+(HEADER, DELIMITER ',');
+```
+
+```{sql connection=con}
+-- Final aggregation
+SELECT
+  early_group,
+  users,
+  retention_30d
+FROM retention_early_group_30d
+ORDER BY users DESC;
+```
+
 
 
 **Result Interpretation**
+Early language exposure shows meaningful differences in 30-day retention:
 
-Early Spanish exposure is associated with higher 30-day retention:
+- Spanish Early Only: **95.1%**
+- Both Languages Early: **92.4%**
+- No Early Engagement: **89.0%**
+- English Early Only: **87.5%**
 
-- Spanish-early: **94.8%**
-- Non-Spanish-early: **88.8%**
-- **+6.0pp retention lift**
+Spanish-only early exposure delivers the strongest performance, representing a **+6.1pp retention lift** vs No Early Engagement and a **+7.6pp lift** vs English Early Only.
 
----
+Users who consumed content in both languages early also outperform baseline, though not as strongly as Spanish-only viewers.
+
+
 
 # 2) Engagement Segmentation Framework
 
-## 28-Day Post-Signup Window
+## 30-Day Post-Signup Window
 
-All features calculated within:
+All engagement features were calculated within:
 
-```
-signup_date → signup_date + 27 days
-```
+
+This window aligns behavioral measurement with the 30-day retention definition.
+---
 
 ## Behavioral Features
 
-- `active_days_28d`
-- `minutes_28d`
-- `titles_28d`
-- `genres_28d`
-- `completion_rate_28d`
-- `spanish_share_28d`
+For each user, we constructed the following variables:
 
+- `active_days_30d` — number of distinct streaming days  
+- `minutes_30d` — total minutes watched  
+- `titles_30d` — unique titles consumed  
+- `genres_30d` — unique genres consumed  
+- `completion_rate_30d` — proportion of streams completed  
+- `spanish_share_30d` — share of minutes watched in Spanish-language content  
+
+Missing values were treated as zero to ensure full user coverage.
+
+---
+
+## Segmentation Methodology
+
+Rather than applying fixed thresholds, we used **k-means clustering (k = 3)** on standardized engagement variables to identify natural behavioral groupings.
+
+This data-driven approach allows structural differences in engagement intensity and Spanish content affinity to emerge organically.
+
+Retention was intentionally excluded from clustering to avoid defining segments using the outcome being evaluated.
 ---
 
 ## SQL: Build Features + Assign Segments
 
 ```{sql connection=con}
+-- A) 30-day features window: Day 0–29 (pre-outcome window)
+CREATE OR REPLACE TABLE features_30d AS
 WITH base_users AS (
-  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
+  SELECT
+    user_id,
+    CAST(signup_date AS DATE) AS signup_date
   FROM users
 ),
 
@@ -193,69 +245,319 @@ events_enriched AS (
   FROM streaming_events e
   JOIN content c
     ON e.content_id = c.content_id
-),
-
-features_28d AS (
-  SELECT
-    b.user_id,
-    COUNT(DISTINCT ev.watch_date) AS active_days_28d,
-    SUM(ev.minutes_watched) AS minutes_28d,
-    COUNT(DISTINCT ev.title) AS titles_28d,
-    COUNT(DISTINCT ev.genre) AS genres_28d,
-    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,
-    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0
-      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d
-  FROM base_users b
-  LEFT JOIN events_enriched ev
-    ON ev.user_id = b.user_id
-   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 27 DAY
-  GROUP BY 1
-),
-
-segmented AS (
-  SELECT *,
-    CASE
-      WHEN minutes_28d IS NULL OR minutes_28d = 0 THEN 'No Engagement (0–28d)'
-      WHEN spanish_share_28d >= 0.70 AND active_days_28d >= 6 THEN 'Spanish-First Loyalists'
-      WHEN active_days_28d >= 12 AND minutes_28d >= 1200 THEN 'Superfans'
-      WHEN active_days_28d <= 5 AND minutes_28d >= 900 THEN 'Bingers'
-      WHEN titles_28d >= 8 AND minutes_28d < 600 THEN 'Browsers / Samplers'
-      WHEN active_days_28d >= 6 OR minutes_28d >= 600 THEN 'Habitual Engagers'
-      ELSE 'Casual'
-    END AS engagement_segment
-  FROM features_28d
 )
 
 SELECT
-  engagement_segment,
-  COUNT(*) AS users,
-  AVG(minutes_28d) AS avg_minutes,
-  AVG(spanish_share_28d) AS avg_spanish_share
-FROM segmented
-GROUP BY 1
-ORDER BY users DESC;
+  b.user_id,
+  COUNT(DISTINCT ev.watch_date) AS active_days_30d,
+  COALESCE(SUM(ev.minutes_watched), 0) AS minutes_30d,
+  COALESCE(COUNT(DISTINCT ev.title), 0) AS titles_30d,
+  COALESCE(COUNT(DISTINCT ev.genre), 0) AS genres_30d,
+  COALESCE(AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END), 0) AS completion_rate_30d,
+  COALESCE(
+    SUM(CASE WHEN ev.language = 'Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0
+      / NULLIF(SUM(ev.minutes_watched), 0),
+    0
+  ) AS spanish_share_30d
+FROM base_users b
+LEFT JOIN events_enriched ev
+  ON ev.user_id = b.user_id
+ AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 29 DAY
+GROUP BY 1;
+
+
+-- B) 30-day retention outcome: Active on Day 30
+CREATE OR REPLACE TABLE retention_user_30d AS
+WITH base_users AS (
+  SELECT
+    user_id,
+    CAST(signup_date AS DATE) AS signup_date
+  FROM users
+),
+subs AS (
+  SELECT
+    user_id,
+    CAST(subscription_start AS DATE) AS subscription_start,
+    CAST(subscription_end AS DATE) AS subscription_end
+  FROM subscriptions
+)
+SELECT
+  b.user_id,
+  CASE
+    WHEN s.subscription_start IS NULL THEN 0
+    WHEN s.subscription_start <= b.signup_date + INTERVAL 30 DAY
+     AND (s.subscription_end IS NULL OR s.subscription_end > b.signup_date + INTERVAL 30 DAY)
+    THEN 1 ELSE 0
+  END AS retained_30d
+FROM base_users b
+LEFT JOIN subs s
+  ON s.user_id = b.user_id;
+
+
+-- C) Optional: Create a modeling-ready table (features + retention)
+CREATE OR REPLACE TABLE features_30d_with_retention AS
+SELECT
+  f.*,
+  r.retained_30d
+FROM features_30d f
+LEFT JOIN retention_user_30d r
+  ON f.user_id = r.user_id;
 ```
 
-**Business Value**
+```{r}
+features <- dbReadTable(con, "features_30d")
+```
 
-Segmentation enables:
+```{r}
+library(dplyr)
+library(cluster)
+library(factoextra)
+library(tidyr)
 
-- Franchise prioritization (Superfans)
-- Next-best-series sequencing (Bingers)
-- Spanish-first investment validation (Spanish-First Loyalists)
-- Onboarding optimization (No Engagement)
+seg_data <- features %>%
+  select(
+    active_days_30d,
+    minutes_30d,
+    titles_30d,
+    genres_30d,
+    completion_rate_30d,
+    spanish_share_30d
+  ) %>%
+  mutate(across(everything(), ~replace_na(., 0)))
+
+# Scale variables
+seg_scaled <- scale(seg_data)
+```
+
+The silhouette method suggested 2 clusters as the statistically strongest separation. However, for business interpretability and product strategy alignment, a 3-cluster solution was selected, balancing separation quality with actionable differentiation.
+```{r}
+fviz_nbclust(seg_scaled, kmeans, method = "wss")
+```
+```{r}
+fviz_nbclust(seg_scaled, kmeans, method = "silhouette")
+```
+
+```{r}
+set.seed(123)
+kmeans_model <- kmeans(seg_scaled, centers = 3, nstart = 25)
+features$cluster <- factor(kmeans_model$cluster)
+```
+
+```{r}
+features %>%
+  group_by(cluster) %>%
+  summarise(
+    users = n(),
+    avg_minutes = mean(minutes_30d, na.rm = TRUE),
+    avg_active_days = mean(active_days_30d, na.rm = TRUE),
+    avg_spanish_share = mean(spanish_share_30d, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+## Engagement Segment Profiles (First 30 Days)
+
+### Spanish Power Users  
+**38% of users | 63% of total minutes**
+
+- ~266 average minutes watched  
+- ~5 active days  
+- ~88% of viewing in Spanish  
+
+These are highly engaged, Spanish-dominant viewers who drive the majority of platform watch time.  
+They represent the core economic engine for Telemundo content on Peacock.
+
+**Strategic Role:** Protect and deepen. Prioritize franchise releases, serialized content drops, and loyalty reinforcement.
+
+---
+
+### Spanish-Light Users  
+**47% of users | 33% of total minutes**
+
+- ~114 average minutes watched  
+- ~2–3 active days  
+- ~90% of viewing in Spanish  
+
+This is the largest segment with strong Spanish affinity but moderate engagement intensity.  
+They are culturally aligned but under-monetized relative to their size.
+
+**Strategic Role:** Grow engagement depth. Use personalized recommendations, autoplay sequencing, and nudges to increase frequency.
+
+---
+
+### English-First / At-Risk  
+**15% of users | 5% of total minutes**
+
+- ~51 average minutes watched  
+- ~1 active day  
+- ~5% of viewing in Spanish  
+
+This small segment shows low engagement and minimal Spanish consumption.  
+They contribute little watch time and exhibit weaker alignment with core Telemundo content.
+
+**Strategic Role:** Optimize onboarding and merchandising to surface relevant Spanish-language content and test conversion tactics.
+```{r}
+# --- User-level cluster plot (k = 3) using 30-day features (Day 0–29) ---
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(tidyr)
+
+# 1) Prep modeling features (same vars you used for clustering)
+seg_data <- features %>%
+  select(
+    active_days_30d,
+    minutes_30d,
+    titles_30d,
+    genres_30d,
+    completion_rate_30d,
+    spanish_share_30d
+  ) %>%
+  mutate(across(everything(), ~ replace_na(., 0)))
+
+seg_scaled <- scale(seg_data)
+
+# 2) Fit k-means (3 clusters)
+set.seed(123)
+km3 <- kmeans(seg_scaled, centers = 3, nstart = 25)
+features$cluster <- factor(km3$cluster)
+
+# 3) Assign executive-friendly names (IMPORTANT: map AFTER checking profiles)
+# Run this once to confirm which cluster number is which:
+# features %>% group_by(cluster) %>% summarise(users=n(),
+#   avg_minutes=mean(minutes_30d), avg_spanish_share=mean(spanish_share_30d))
+
+cluster_labels <- c(
+  "1" = "Spanish Power Users",
+  "2" = "English-First / At-Risk",
+  "3" = "Spanish-Light Users"
+)
+
+features$cluster_name <- factor(
+  cluster_labels[as.character(features$cluster)],
+  levels = c("Spanish Power Users", "Spanish-Light Users", "English-First / At-Risk")
+)
+
+# 4) Cluster centers (for visual anchors)
+centers <- features %>%
+  group_by(cluster_name) %>%
+  summarise(
+    center_x = mean(minutes_30d, na.rm = TRUE),
+    center_y = mean(spanish_share_30d, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# 5) Plot: Minutes vs Spanish Share (all users)
+ggplot(features, aes(x = minutes_30d, y = spanish_share_30d, color = cluster_name)) +
+  geom_point(alpha = 0.30, size = 1.8) +
+  geom_point(
+    data = centers,
+    aes(x = center_x, y = center_y),
+    inherit.aes = FALSE,
+    color = "black",
+    size = 6
+  ) +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  labs(
+    title = "User-Level Engagement Clusters",
+    subtitle = "K-means (k=3) on 30-day behavior (Day 0–29)",
+    x = "Minutes Watched (First 30 Days)",
+    y = "Spanish Content Share",
+    color = NULL
+  ) +
+  theme_minimal(base_size = 18) +
+  theme(
+    plot.title = element_text(face = "bold", size = 26),
+    plot.subtitle = element_text(size = 18),
+    legend.position = "right",
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+```{r}
+
+
+cluster_profile <- features %>%
+  group_by(cluster_name) %>%
+  summarise(
+    users = n(),
+    pct_users = percent(n() / nrow(features), accuracy = 1),
+    avg_minutes = round(mean(minutes_30d, na.rm = TRUE), 1),
+    avg_active_days = round(mean(active_days_30d, na.rm = TRUE), 1),
+    avg_spanish_share = percent(mean(spanish_share_30d, na.rm = TRUE), accuracy = 1),
+    total_minutes = sum(minutes_30d, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+cluster_profile
+```
+```{r}
+cluster_profile <- cluster_profile %>%
+  mutate(
+    pct_total_minutes = percent(total_minutes / sum(total_minutes), accuracy = 1)
+  )
+
+cluster_profile
+
+write.csv(cluster_profile,
+          "data/cluster_profile.csv",
+          row.names = FALSE)
+```
+
+
+
+```{r}
+# Make sure retention table exists in R
+retention_user_30d <- dbReadTable(con, "retention_user_30d")
+
+# features %>%
+#   group_by(cluster) %>%
+#   summarise(
+#     users = n(),
+#     avg_minutes = mean(minutes_30d),
+#     avg_spanish_share = mean(spanish_share_30d)
+#   )
+
+features$cluster_name <- case_when(
+  features$cluster == 2 ~ "Spanish Power Users",
+  features$cluster == 3 ~ "Spanish-Light Users",
+  features$cluster == 1 ~ "English-First / At-Risk"
+)
+
+cluster_retention <- features %>%
+  left_join(retention_user_30d, by = "user_id") %>%
+  group_by(cluster_name) %>%
+  summarise(
+    users = n(),
+    retention_30d = scales::percent(mean(retained_30d), accuracy = 1),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(users))
+
+cluster_retention
+```
+
+
 
 ---
 
 # 3) Churn Analysis
 
-## Treatment
+## Research Question
 
-Watched Spanish content in first 7 days (≥2 minutes).
+Does early Spanish-language consumption reduce early lifecycle churn?
 
-## Outcome
+## Treatment Definition
 
-`subscriptions.churn_flag`
+Watched Spanish-language content within the first 7 days post-signup  
+(≥ 2 minutes)
+
+## Outcome Definition
+
+30-day churn:
+
+User is not active on Day 30 post-signup.
 
 ---
 
@@ -263,7 +565,9 @@ Watched Spanish content in first 7 days (≥2 minutes).
 
 ```{sql connection=con}
 WITH base_users AS (
-  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
+  SELECT
+    user_id,
+    CAST(signup_date AS DATE) AS signup_date
   FROM users
 ),
 
@@ -274,12 +578,80 @@ events_enriched AS (
     e.minutes_watched,
     c.language
   FROM streaming_events e
-  JOIN content c ON e.content_id = c.content_id
+  JOIN content c
+    ON e.content_id = c.content_id
 ),
 
+-- Treatment: Spanish watched in first 7 days (>= 2 minutes)
 spanish_early_flag AS (
   SELECT
     b.user_id,
+    b.signup_date,
+    CASE
+      WHEN COUNT(ev.user_id) > 0 THEN 1 ELSE 0
+    END AS spanish_early
+  FROM base_users b
+  LEFT JOIN events_enriched ev
+    ON ev.user_id = b.user_id
+   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
+   AND ev.language = 'Spanish'
+   AND ev.minutes_watched >= 2
+  GROUP BY 1,2
+),
+
+subs AS (
+  SELECT
+    user_id,
+    CAST(subscription_start AS DATE) AS subscription_start,
+    CAST(subscription_end   AS DATE) AS subscription_end
+  FROM subscriptions
+),
+
+-- Outcome: retained on day 30 (same definition as retention section)
+retention_30d AS (
+  SELECT
+    f.user_id,
+    f.spanish_early,
+    CASE
+      WHEN s.subscription_start IS NULL THEN 0
+      WHEN s.subscription_start <= f.signup_date + INTERVAL 30 DAY
+       AND (s.subscription_end IS NULL OR s.subscription_end > f.signup_date + INTERVAL 30 DAY)
+      THEN 1 ELSE 0
+    END AS retained_30d
+  FROM spanish_early_flag f
+  LEFT JOIN subs s
+    ON s.user_id = f.user_id
+)
+
+SELECT
+  spanish_early,
+  COUNT(*) AS users,
+  ROUND(AVG(1 - retained_30d), 4) AS churn_30d,
+  ROUND(AVG(retained_30d), 4)     AS retention_30d
+FROM retention_30d
+GROUP BY 1
+ORDER BY 1;
+```
+```{sql connection=con}
+CREATE OR REPLACE TABLE churn_spanish_early_30d AS
+WITH base_users AS (
+  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
+  FROM users
+),
+events_enriched AS (
+  SELECT
+    e.user_id,
+    CAST(e.watch_start AS DATE) AS watch_date,
+    e.minutes_watched,
+    c.language
+  FROM streaming_events e
+  JOIN content c
+    ON e.content_id = c.content_id
+),
+spanish_early_flag AS (
+  SELECT
+    b.user_id,
+    b.signup_date,
     CASE WHEN COUNT(ev.user_id) > 0 THEN 1 ELSE 0 END AS spanish_early
   FROM base_users b
   LEFT JOIN events_enriched ev
@@ -287,56 +659,109 @@ spanish_early_flag AS (
    AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
    AND ev.language = 'Spanish'
    AND ev.minutes_watched >= 2
-  GROUP BY 1
+  GROUP BY 1,2
+),
+subs AS (
+  SELECT
+    user_id,
+    CAST(subscription_start AS DATE) AS subscription_start,
+    CAST(subscription_end AS DATE) AS subscription_end
+  FROM subscriptions
+),
+retention_30d AS (
+  SELECT
+    f.user_id,
+    f.spanish_early,
+    CASE
+      WHEN s.subscription_start IS NULL THEN 0
+      WHEN s.subscription_start <= f.signup_date + INTERVAL 30 DAY
+       AND (s.subscription_end IS NULL OR s.subscription_end > f.signup_date + INTERVAL 30 DAY)
+      THEN 1 ELSE 0
+    END AS retained_30d
+  FROM spanish_early_flag f
+  LEFT JOIN subs s
+    ON s.user_id = f.user_id
 )
-
 SELECT
   spanish_early,
   COUNT(*) AS users,
-  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate
-FROM spanish_early_flag f
-JOIN subscriptions s
-  ON f.user_id = s.user_id
+  ROUND(AVG(1 - retained_30d), 4) AS churn_30d,
+  ROUND(AVG(retained_30d), 4)     AS retention_30d
+FROM retention_30d
 GROUP BY 1
 ORDER BY 1;
 ```
 
-**Observed Outcome**
+```{sql connection=con}
+COPY churn_spanish_early_30d
+TO 'data/churn_spanish_early_30d.csv'
+(HEADER, DELIMITER ',');
+```
 
-- Non-Spanish-early churn: **41.1%**
-- Spanish-early churn: **20.0%**
-- **−21.1pp absolute reduction**
-- ~**51% relative reduction**
 
+
+## Early Spanish Engagement Reduces Churn
+
+Users who watch Spanish-language content in their first 7 days show:
+
+- **5.2% 30-day churn**
+- vs **11.2%** for non-Spanish-early users
+- **−6.0pp absolute reduction**
+- ~**54% relative churn reduction**
+
+Early Spanish exposure is strongly associated with subscription durability.
+
+This analysis is observational.  
+Users who watch Spanish content early may already have higher intrinsic engagement intent.  
+A controlled onboarding experiment would validate causality.
 ---
 
 # Robustness Checks
 
-Stratified by:
+To assess whether the early Spanish effect is confounded by user mix,  
+results were stratified by:
 
-- Preferred language
+- Preferred interface language (Spanish vs English)
 - Acquisition channel
 
-Churn gap remains directionally consistent across strata, reducing (but not eliminating) concern that channel mix or language preference fully explains the effect.
+The 30-day churn reduction associated with early Spanish exposure  
+remains directionally consistent across strata.
+
+This reduces (but does not eliminate) the concern that
+channel mix or language preference fully explains the effect.
+
 
 ---
 
 # Limitations
 
-- Observational, not causal
-- Self-selection bias likely
-- Spanish catalog overrepresentation
-- Churn_flag may not capture subscription pauses or re-subs
+- Observational analysis — not causal
+- Self-selection bias likely (higher-intent users may seek Spanish content early)
+- Spanish catalog overrepresentation (8 of 10 titles are Spanish)
+- 30-day retention captures early durability only, not long-term value
+- No control for marketing targeting or onboarding merchandising exposure
 
 ---
 
 # Recommended Next Steps
 
-1. A/B test Spanish-first onboarding merchandising
-2. Propensity adjustment controlling for early engagement volume and channel
-3. Uplift modeling to identify users with incremental retention sensitivity
+- A/B Test Spanish-Forward Onboarding  
+   Randomize merchandising emphasis in the first 7 days  
+   to measure incremental retention impact.
+
+- Propensity-Adjusted Modeling  
+   Control for acquisition channel, engagement intensity,  
+   and user language preference.
+
+- Early-Lifecycle Uplift Modeling  
+   Identify users most sensitive to Spanish-first exposure  
+   to prioritize targeted interventions.
+
+- Extend to 60- and 90-Day Retention  
+   Validate whether early Spanish alignment drives durable lifetime value.
 
 
 ```{r close-connection, include=FALSE, message=FALSE, warning=FALSE}
+
 dbDisconnect(con, shutdown = TRUE)
 ```

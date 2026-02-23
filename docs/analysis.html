@@ -102,12 +102,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const button = document.createElement("button");
+  button.innerText = "Hide All Code";
+
+  button.style.position = "fixed";
+  button.style.top = "15px";
+  button.style.right = "20px";
+  button.style.zIndex = "1000";
+  button.style.padding = "8px 14px";
+  button.style.fontSize = "14px";
+  button.style.fontWeight = "600";
+  button.style.backgroundColor = "#1f77b4";
+  button.style.color = "white";
+  button.style.border = "none";
+  button.style.borderRadius = "6px";
+  button.style.cursor = "pointer";
+  button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+
+  let expanded = true;
+
+  button.onclick = function () {
+    const blocks = document.querySelectorAll("details");
+
+    if (expanded) {
+      blocks.forEach(el => el.open = false);
+      button.innerText = "Show All Code";
+    } else {
+      blocks.forEach(el => el.open = true);
+      button.innerText = "Hide All Code";
+    }
+
+    expanded = !expanded;
+  };
+
+  document.body.appendChild(button);
+});
+</script>
 
 
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-fixed quarto-light">
+<body class="nav-fixed fullcontent quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -147,22 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#business-context" id="toc-business-context" class="nav-link active" data-scroll-target="#business-context">Business Context</a></li>
-  <li><a href="#data-model-definitions" id="toc-data-model-definitions" class="nav-link" data-scroll-target="#data-model-definitions">Data Model &amp; Definitions</a></li>
-  <li><a href="#cohort-retention-analysis-30-day" id="toc-cohort-retention-analysis-30-day" class="nav-link" data-scroll-target="#cohort-retention-analysis-30-day">1) Cohort Retention Analysis (30-Day)</a></li>
-  <li><a href="#engagement-segmentation-framework" id="toc-engagement-segmentation-framework" class="nav-link" data-scroll-target="#engagement-segmentation-framework">2) Engagement Segmentation Framework</a></li>
-  <li><a href="#churn-analysis" id="toc-churn-analysis" class="nav-link" data-scroll-target="#churn-analysis">3) Churn Analysis</a></li>
-  <li><a href="#robustness-checks" id="toc-robustness-checks" class="nav-link" data-scroll-target="#robustness-checks">Robustness Checks</a></li>
-  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
-  <li><a href="#recommended-next-steps" id="toc-recommended-next-steps" class="nav-link" data-scroll-target="#recommended-next-steps">Recommended Next Steps</a></li>
-  </ul>
-</nav>
-    </div>
+    
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -228,63 +251,683 @@ The objective is to evaluate how <strong>Spanish-language content</strong> drive
 <section id="sql-30-day-retention-for-spanish-early-cohort" class="level2">
 <h2 class="anchored" data-anchor-id="sql-30-day-retention-for-spanish-early-cohort">SQL (30-day retention for Spanish-early cohort)</h2>
 <div class="cell">
-<details class="code-fold">
+<details open="" class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- selecting user and signup date</span></span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">TABLE</span> retention_early_group_30d <span class="kw">AS</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- streaming events left join content by content id</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    c.language</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>spanish_early_flag <span class="kw">AS</span> (</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    b.signup_date,</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span> <span class="cf">WHEN</span> <span class="fu">COUNT</span>(ev.user_id) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span> <span class="kw">AS</span> spanish_early</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span>,<span class="dv">2</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>ret30 <span class="kw">AS</span> (</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    f.user_id,</span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    f.spanish_early,</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="op">&lt;=</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> (s.subscription_end <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> s.subscription_end <span class="op">&gt;</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span>)</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> retained_30d</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> spanish_early_flag f</span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> subscriptions s</span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> s.user_id <span class="op">=</span> f.user_id</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  spanish_early,</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">AVG</span>(retained_30d) <span class="kw">AS</span> retention_30d</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> ret30</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> user_id, <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    c.language</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>early_language_flags <span class="kw">AS</span> (</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    b.signup_date,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">MAX</span>(<span class="cf">CASE</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span> <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="kw">AS</span> spanish_early,</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">MAX</span>(<span class="cf">CASE</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span> <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'English'</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="kw">AS</span> english_early</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span>,<span class="dv">2</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>early_grouped <span class="kw">AS</span> (</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    signup_date,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> spanish_early <span class="op">=</span> <span class="dv">1</span> <span class="kw">AND</span> english_early <span class="op">=</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="st">'Spanish Early Only'</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> spanish_early <span class="op">=</span> <span class="dv">0</span> <span class="kw">AND</span> english_early <span class="op">=</span> <span class="dv">1</span> <span class="cf">THEN</span> <span class="st">'English Early Only'</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> spanish_early <span class="op">=</span> <span class="dv">1</span> <span class="kw">AND</span> english_early <span class="op">=</span> <span class="dv">1</span> <span class="cf">THEN</span> <span class="st">'Both Languages Early'</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>      <span class="cf">ELSE</span> <span class="st">'No Early Engagement'</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> early_group</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> early_language_flags</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>ret30 <span class="kw">AS</span> (</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    e.early_group,</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="op">&lt;=</span> e.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> (s.subscription_end <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> s.subscription_end <span class="op">&gt;</span> e.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span>)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> retained_30d</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> early_grouped e</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> subscriptions s</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> s.user_id <span class="op">=</span> e.user_id</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  early_group,</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ROUND</span>(<span class="fu">AVG</span>(retained_30d), <span class="dv">4</span>) <span class="kw">AS</span> retention_30d</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> ret30</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> users <span class="kw">DESC</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Final aggregation</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  early_group,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  users,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  retention_30d</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> retention_early_group_30d</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> users <span class="kw">DESC</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>4 records</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">early_group</th>
+<th style="text-align: right;">users</th>
+<th style="text-align: right;">retention_30d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">No Early Engagement</td>
+<td style="text-align: right;">1155</td>
+<td style="text-align: right;">0.8900</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Spanish Early Only</td>
+<td style="text-align: right;">1046</td>
+<td style="text-align: right;">0.9512</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">English Early Only</td>
+<td style="text-align: right;">168</td>
+<td style="text-align: right;">0.8750</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Both Languages Early</td>
+<td style="text-align: right;">131</td>
+<td style="text-align: right;">0.9237</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><strong>Result Interpretation</strong> Early language exposure shows meaningful differences in 30-day retention:</p>
+<ul>
+<li>Spanish Early Only: <strong>95.1%</strong></li>
+<li>Both Languages Early: <strong>92.4%</strong></li>
+<li>No Early Engagement: <strong>89.0%</strong></li>
+<li>English Early Only: <strong>87.5%</strong></li>
+</ul>
+<p>Spanish-only early exposure delivers the strongest performance, representing a <strong>+6.1pp retention lift</strong> vs No Early Engagement and a <strong>+7.6pp lift</strong> vs English Early Only.</p>
+<p>Users who consumed content in both languages early also outperform baseline, though not as strongly as Spanish-only viewers.</p>
+</section>
+</section>
+<section id="engagement-segmentation-framework" class="level1">
+<h1>2) Engagement Segmentation Framework</h1>
+<section id="day-post-signup-window" class="level2">
+<h2 class="anchored" data-anchor-id="day-post-signup-window">30-Day Post-Signup Window</h2>
+<p>All engagement features were calculated within:</p>
+</section>
+<section id="this-window-aligns-behavioral-measurement-with-the-30-day-retention-definition." class="level2">
+<h2 class="anchored" data-anchor-id="this-window-aligns-behavioral-measurement-with-the-30-day-retention-definition.">This window aligns behavioral measurement with the 30-day retention definition.</h2>
+</section>
+<section id="behavioral-features" class="level2">
+<h2 class="anchored" data-anchor-id="behavioral-features">Behavioral Features</h2>
+<p>For each user, we constructed the following variables:</p>
+<ul>
+<li><code>active_days_30d</code> — number of distinct streaming days<br>
+</li>
+<li><code>minutes_30d</code> — total minutes watched<br>
+</li>
+<li><code>titles_30d</code> — unique titles consumed<br>
+</li>
+<li><code>genres_30d</code> — unique genres consumed<br>
+</li>
+<li><code>completion_rate_30d</code> — proportion of streams completed<br>
+</li>
+<li><code>spanish_share_30d</code> — share of minutes watched in Spanish-language content</li>
+</ul>
+<p>Missing values were treated as zero to ensure full user coverage.</p>
+<hr>
+</section>
+<section id="segmentation-methodology" class="level2">
+<h2 class="anchored" data-anchor-id="segmentation-methodology">Segmentation Methodology</h2>
+<p>Rather than applying fixed thresholds, we used <strong>k-means clustering (k = 3)</strong> on standardized engagement variables to identify natural behavioral groupings.</p>
+<p>This data-driven approach allows structural differences in engagement intensity and Spanish content affinity to emerge organically.</p>
+</section>
+<section id="retention-was-intentionally-excluded-from-clustering-to-avoid-defining-segments-using-the-outcome-being-evaluated." class="level2">
+<h2 class="anchored" data-anchor-id="retention-was-intentionally-excluded-from-clustering-to-avoid-defining-segments-using-the-outcome-being-evaluated.">Retention was intentionally excluded from clustering to avoid defining segments using the outcome being evaluated.</h2>
+</section>
+<section id="sql-build-features-assign-segments" class="level2">
+<h2 class="anchored" data-anchor-id="sql-build-features-assign-segments">SQL: Build Features + Assign Segments</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- A) 30-day features window: Day 0–29 (pre-outcome window)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">TABLE</span> features_30d <span class="kw">AS</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    e.completed_flag,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    c.title,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    c.genre,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    c.language</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  b.user_id,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.watch_date) <span class="kw">AS</span> active_days_30d,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COALESCE</span>(<span class="fu">SUM</span>(ev.minutes_watched), <span class="dv">0</span>) <span class="kw">AS</span> minutes_30d,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COALESCE</span>(<span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.title), <span class="dv">0</span>) <span class="kw">AS</span> titles_30d,</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COALESCE</span>(<span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.genre), <span class="dv">0</span>) <span class="kw">AS</span> genres_30d,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COALESCE</span>(<span class="fu">AVG</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> ev.completed_flag <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>), <span class="dv">0</span>) <span class="kw">AS</span> completion_rate_30d,</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COALESCE</span>(</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">SUM</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span> <span class="cf">THEN</span> ev.minutes_watched <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="op">*</span> <span class="fl">1.0</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      <span class="op">/</span> <span class="fu">NULLIF</span>(<span class="fu">SUM</span>(ev.minutes_watched), <span class="dv">0</span>),</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="kw">AS</span> spanish_share_30d</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> base_users b</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a> <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">29</span> <span class="dt">DAY</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span>;</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="co">-- B) 30-day retention outcome: Active on Day 30</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">TABLE</span> retention_user_30d <span class="kw">AS</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>subs <span class="kw">AS</span> (</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_start,</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_end <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_end</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> subscriptions</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>  b.user_id,</span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>  <span class="cf">CASE</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>    <span class="cf">WHEN</span> s.subscription_start <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">WHEN</span> s.subscription_start <span class="op">&lt;=</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>     <span class="kw">AND</span> (s.subscription_end <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> s.subscription_end <span class="op">&gt;</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span>)</span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="kw">AS</span> retained_30d</span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> base_users b</span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> subs s</span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> s.user_id <span class="op">=</span> b.user_id;</span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a><span class="co">-- C) Optional: Create a modeling-ready table (features + retention)</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">TABLE</span> features_30d_with_retention <span class="kw">AS</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>  f.<span class="op">*</span>,</span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>  r.retained_30d</span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> features_30d f</span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> retention_user_30d r</span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> f.user_id <span class="op">=</span> r.user_id;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>features <span class="ot">&lt;-</span> <span class="fu">dbReadTable</span>(con, <span class="st">"features_30d"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cluster)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(factoextra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: ggplot2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Welcome! Want to learn more? See two factoextra-related books at https://goo.gl/ve3WBa</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>seg_data <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    active_days_30d,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    minutes_30d,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    titles_30d,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    genres_30d,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    completion_rate_30d,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    spanish_share_30d</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span><span class="fu">replace_na</span>(., <span class="dv">0</span>)))</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Scale variables</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>seg_scaled <span class="ot">&lt;-</span> <span class="fu">scale</span>(seg_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The silhouette method suggested 2 clusters as the statistically strongest separation. However, for business interpretability and product strategy alignment, a 3-cluster solution was selected, balancing separation quality with actionable differentiation.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_nbclust</span>(seg_scaled, kmeans, <span class="at">method =</span> <span class="st">"wss"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_nbclust</span>(seg_scaled, kmeans, <span class="at">method =</span> <span class="st">"silhouette"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>kmeans_model <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(seg_scaled, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>features<span class="sc">$</span>cluster <span class="ot">&lt;-</span> <span class="fu">factor</span>(kmeans_model<span class="sc">$</span>cluster)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>features <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">users =</span> <span class="fu">n</span>(),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_minutes =</span> <span class="fu">mean</span>(minutes_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_active_days =</span> <span class="fu">mean</span>(active_days_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_spanish_share =</span> <span class="fu">mean</span>(spanish_share_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 5
+  cluster users avg_minutes avg_active_days avg_spanish_share
+  &lt;fct&gt;   &lt;int&gt;       &lt;dbl&gt;           &lt;dbl&gt;             &lt;dbl&gt;
+1 1         369        51.4            1.19            0.0469
+2 2         956       266.             5.19            0.882 
+3 3        1175       114.             2.43            0.895 </code></pre>
+</div>
+</div>
+</section>
+<section id="engagement-segment-profiles-first-30-days" class="level2">
+<h2 class="anchored" data-anchor-id="engagement-segment-profiles-first-30-days">Engagement Segment Profiles (First 30 Days)</h2>
+<section id="spanish-power-users" class="level3">
+<h3 class="anchored" data-anchor-id="spanish-power-users">Spanish Power Users</h3>
+<p><strong>38% of users | 63% of total minutes</strong></p>
+<ul>
+<li>~266 average minutes watched<br>
+</li>
+<li>~5 active days<br>
+</li>
+<li>~88% of viewing in Spanish</li>
+</ul>
+<p>These are highly engaged, Spanish-dominant viewers who drive the majority of platform watch time.<br>
+They represent the core economic engine for Telemundo content on Peacock.</p>
+<p><strong>Strategic Role:</strong> Protect and deepen. Prioritize franchise releases, serialized content drops, and loyalty reinforcement.</p>
+<hr>
+</section>
+<section id="spanish-light-users" class="level3">
+<h3 class="anchored" data-anchor-id="spanish-light-users">Spanish-Light Users</h3>
+<p><strong>47% of users | 33% of total minutes</strong></p>
+<ul>
+<li>~114 average minutes watched<br>
+</li>
+<li>~2–3 active days<br>
+</li>
+<li>~90% of viewing in Spanish</li>
+</ul>
+<p>This is the largest segment with strong Spanish affinity but moderate engagement intensity.<br>
+They are culturally aligned but under-monetized relative to their size.</p>
+<p><strong>Strategic Role:</strong> Grow engagement depth. Use personalized recommendations, autoplay sequencing, and nudges to increase frequency.</p>
+<hr>
+</section>
+<section id="english-first-at-risk" class="level3">
+<h3 class="anchored" data-anchor-id="english-first-at-risk">English-First / At-Risk</h3>
+<p><strong>15% of users | 5% of total minutes</strong></p>
+<ul>
+<li>~51 average minutes watched<br>
+</li>
+<li>~1 active day<br>
+</li>
+<li>~5% of viewing in Spanish</li>
+</ul>
+<p>This small segment shows low engagement and minimal Spanish consumption.<br>
+They contribute little watch time and exhibit weaker alignment with core Telemundo content.</p>
+<p><strong>Strategic Role:</strong> Optimize onboarding and merchandising to surface relevant Spanish-language content and test conversion tactics.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- User-level cluster plot (k = 3) using 30-day features (Day 0–29) ---</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) Prep modeling features (same vars you used for clustering)</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>seg_data <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    active_days_30d,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    minutes_30d,</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    titles_30d,</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    genres_30d,</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    completion_rate_30d,</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    spanish_share_30d</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">replace_na</span>(., <span class="dv">0</span>)))</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>seg_scaled <span class="ot">&lt;-</span> <span class="fu">scale</span>(seg_data)</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Fit k-means (3 clusters)</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>km3 <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(seg_scaled, <span class="at">centers =</span> <span class="dv">3</span>, <span class="at">nstart =</span> <span class="dv">25</span>)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>features<span class="sc">$</span>cluster <span class="ot">&lt;-</span> <span class="fu">factor</span>(km3<span class="sc">$</span>cluster)</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) Assign executive-friendly names (IMPORTANT: map AFTER checking profiles)</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Run this once to confirm which cluster number is which:</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a><span class="co"># features %&gt;% group_by(cluster) %&gt;% summarise(users=n(),</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="co">#   avg_minutes=mean(minutes_30d), avg_spanish_share=mean(spanish_share_30d))</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>cluster_labels <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>  <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"Spanish Power Users"</span>,</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>  <span class="st">"2"</span> <span class="ot">=</span> <span class="st">"English-First / At-Risk"</span>,</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>  <span class="st">"3"</span> <span class="ot">=</span> <span class="st">"Spanish-Light Users"</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>features<span class="sc">$</span>cluster_name <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>  cluster_labels[<span class="fu">as.character</span>(features<span class="sc">$</span>cluster)],</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Spanish Power Users"</span>, <span class="st">"Spanish-Light Users"</span>, <span class="st">"English-First / At-Risk"</span>)</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a><span class="co"># 4) Cluster centers (for visual anchors)</span></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>centers <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster_name) <span class="sc">%&gt;%</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">center_x =</span> <span class="fu">mean</span>(minutes_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">center_y =</span> <span class="fu">mean</span>(spanish_share_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a><span class="co"># 5) Plot: Minutes vs Spanish Share (all users)</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(features, <span class="fu">aes</span>(<span class="at">x =</span> minutes_30d, <span class="at">y =</span> spanish_share_30d, <span class="at">color =</span> cluster_name)) <span class="sc">+</span></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.30</span>, <span class="at">size =</span> <span class="fl">1.8</span>) <span class="sc">+</span></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> centers,</span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> center_x, <span class="at">y =</span> center_y),</span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>,</span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">6</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="fu">percent_format</span>(<span class="at">accuracy =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"User-Level Engagement Clusters"</span>,</span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"K-means (k=3) on 30-day behavior (Day 0–29)"</span>,</span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Minutes Watched (First 30 Days)"</span>,</span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Spanish Content Share"</span>,</span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="cn">NULL</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">18</span>) <span class="sc">+</span></span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">26</span>),</span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>),</span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="analysis_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cluster_profile <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster_name) <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">users =</span> <span class="fu">n</span>(),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">pct_users =</span> <span class="fu">percent</span>(<span class="fu">n</span>() <span class="sc">/</span> <span class="fu">nrow</span>(features), <span class="at">accuracy =</span> <span class="dv">1</span>),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_minutes =</span> <span class="fu">round</span>(<span class="fu">mean</span>(minutes_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">1</span>),</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_active_days =</span> <span class="fu">round</span>(<span class="fu">mean</span>(active_days_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">1</span>),</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">avg_spanish_share =</span> <span class="fu">percent</span>(<span class="fu">mean</span>(spanish_share_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">accuracy =</span> <span class="dv">1</span>),</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_minutes =</span> <span class="fu">sum</span>(minutes_30d, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>cluster_profile</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 7
+  cluster_name     users pct_users avg_minutes avg_active_days avg_spanish_share
+  &lt;fct&gt;            &lt;int&gt; &lt;chr&gt;           &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt;            
+1 Spanish Power U…   369 15%              51.4             1.2 5%               
+2 Spanish-Light U…  1175 47%             114.              2.4 90%              
+3 English-First /…   956 38%             266.              5.2 88%              
+# ℹ 1 more variable: total_minutes &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>cluster_profile <span class="ot">&lt;-</span> cluster_profile <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">pct_total_minutes =</span> <span class="fu">percent</span>(total_minutes <span class="sc">/</span> <span class="fu">sum</span>(total_minutes), <span class="at">accuracy =</span> <span class="dv">1</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>cluster_profile</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 8
+  cluster_name     users pct_users avg_minutes avg_active_days avg_spanish_share
+  &lt;fct&gt;            &lt;int&gt; &lt;chr&gt;           &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt;            
+1 Spanish Power U…   369 15%              51.4             1.2 5%               
+2 Spanish-Light U…  1175 47%             114.              2.4 90%              
+3 English-First /…   956 38%             266.              5.2 88%              
+# ℹ 2 more variables: total_minutes &lt;dbl&gt;, pct_total_minutes &lt;chr&gt;</code></pre>
+</div>
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(cluster_profile,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>          <span class="st">"data/cluster_profile.csv"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure retention table exists in R</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>retention_user_30d <span class="ot">&lt;-</span> <span class="fu">dbReadTable</span>(con, <span class="st">"retention_user_30d"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># features %&gt;%</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_by(cluster) %&gt;%</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   summarise(</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co">#     users = n(),</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co">#     avg_minutes = mean(minutes_30d),</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     avg_spanish_share = mean(spanish_share_30d)</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   )</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>features<span class="sc">$</span>cluster_name <span class="ot">&lt;-</span> <span class="fu">case_when</span>(</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  features<span class="sc">$</span>cluster <span class="sc">==</span> <span class="dv">2</span> <span class="sc">~</span> <span class="st">"Spanish Power Users"</span>,</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  features<span class="sc">$</span>cluster <span class="sc">==</span> <span class="dv">3</span> <span class="sc">~</span> <span class="st">"Spanish-Light Users"</span>,</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  features<span class="sc">$</span>cluster <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"English-First / At-Risk"</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>cluster_retention <span class="ot">&lt;-</span> features <span class="sc">%&gt;%</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(retention_user_30d, <span class="at">by =</span> <span class="st">"user_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(cluster_name) <span class="sc">%&gt;%</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">users =</span> <span class="fu">n</span>(),</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">retention_30d =</span> scales<span class="sc">::</span><span class="fu">percent</span>(<span class="fu">mean</span>(retained_30d), <span class="at">accuracy =</span> <span class="dv">1</span>),</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(users))</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>cluster_retention</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  cluster_name            users retention_30d
+  &lt;chr&gt;                   &lt;int&gt; &lt;chr&gt;        
+1 Spanish-Light Users      1175 92%          
+2 Spanish Power Users       956 92%          
+3 English-First / At-Risk   369 89%          </code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+</section>
+<section id="churn-analysis" class="level1">
+<h1>3) Churn Analysis</h1>
+<section id="research-question" class="level2">
+<h2 class="anchored" data-anchor-id="research-question">Research Question</h2>
+<p>Does early Spanish-language consumption reduce early lifecycle churn?</p>
+</section>
+<section id="treatment-definition" class="level2">
+<h2 class="anchored" data-anchor-id="treatment-definition">Treatment Definition</h2>
+<p>Watched Spanish-language content within the first 7 days post-signup<br>
+(≥ 2 minutes)</p>
+</section>
+<section id="outcome-definition" class="level2">
+<h2 class="anchored" data-anchor-id="outcome-definition">Outcome Definition</h2>
+<p>30-day churn:</p>
+<p>User is not active on Day 30 post-signup.</p>
+<hr>
+</section>
+<section id="sql-unadjusted-churn-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="sql-unadjusted-churn-comparison">SQL: Unadjusted Churn Comparison</h2>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    c.language</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="co">-- Treatment: Spanish watched in first 7 days (&gt;= 2 minutes)</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>spanish_early_flag <span class="kw">AS</span> (</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    b.signup_date,</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> <span class="fu">COUNT</span>(ev.user_id) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> spanish_early</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span></span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span>,<span class="dv">2</span></span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>subs <span class="kw">AS</span> (</span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_start,</span>
+<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_end   <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_end</span>
+<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> subscriptions</span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a><span class="co">-- Outcome: retained on day 30 (same definition as retention section)</span></span>
+<span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>retention_30d <span class="kw">AS</span> (</span>
+<span id="cb28-46"><a href="#cb28-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb28-47"><a href="#cb28-47" aria-hidden="true" tabindex="-1"></a>    f.user_id,</span>
+<span id="cb28-48"><a href="#cb28-48" aria-hidden="true" tabindex="-1"></a>    f.spanish_early,</span>
+<span id="cb28-49"><a href="#cb28-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
+<span id="cb28-50"><a href="#cb28-50" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span></span>
+<span id="cb28-51"><a href="#cb28-51" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="op">&lt;=</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span></span>
+<span id="cb28-52"><a href="#cb28-52" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> (s.subscription_end <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> s.subscription_end <span class="op">&gt;</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span>)</span>
+<span id="cb28-53"><a href="#cb28-53" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
+<span id="cb28-54"><a href="#cb28-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> retained_30d</span>
+<span id="cb28-55"><a href="#cb28-55" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> spanish_early_flag f</span>
+<span id="cb28-56"><a href="#cb28-56" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> subs s</span>
+<span id="cb28-57"><a href="#cb28-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> s.user_id <span class="op">=</span> f.user_id</span>
+<span id="cb28-58"><a href="#cb28-58" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-59"><a href="#cb28-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-60"><a href="#cb28-60" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb28-61"><a href="#cb28-61" aria-hidden="true" tabindex="-1"></a>  spanish_early,</span>
+<span id="cb28-62"><a href="#cb28-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
+<span id="cb28-63"><a href="#cb28-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ROUND</span>(<span class="fu">AVG</span>(<span class="dv">1</span> <span class="op">-</span> retained_30d), <span class="dv">4</span>) <span class="kw">AS</span> churn_30d,</span>
+<span id="cb28-64"><a href="#cb28-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ROUND</span>(<span class="fu">AVG</span>(retained_30d), <span class="dv">4</span>)     <span class="kw">AS</span> retention_30d</span>
+<span id="cb28-65"><a href="#cb28-65" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> retention_30d</span>
+<span id="cb28-66"><a href="#cb28-66" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
+<span id="cb28-67"><a href="#cb28-67" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -293,6 +936,7 @@ The objective is to evaluate how <strong>Spanish-language content</strong> drive
 <tr class="header">
 <th style="text-align: left;">spanish_early</th>
 <th style="text-align: right;">users</th>
+<th style="text-align: right;">churn_30d</th>
 <th style="text-align: right;">retention_30d</th>
 </tr>
 </thead>
@@ -300,277 +944,144 @@ The objective is to evaluate how <strong>Spanish-language content</strong> drive
 <tr class="odd">
 <td style="text-align: left;">0</td>
 <td style="text-align: right;">1323</td>
-<td style="text-align: right;">0.8881330</td>
+<td style="text-align: right;">0.1119</td>
+<td style="text-align: right;">0.8881</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">1</td>
 <td style="text-align: right;">1177</td>
-<td style="text-align: right;">0.9481733</td>
+<td style="text-align: right;">0.0518</td>
+<td style="text-align: right;">0.9482</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p><strong>Result Interpretation</strong></p>
-<p>Early Spanish exposure is associated with higher 30-day retention:</p>
-<ul>
-<li>Spanish-early: <strong>94.8%</strong></li>
-<li>Non-Spanish-early: <strong>88.8%</strong></li>
-<li><strong>+6.0pp retention lift</strong></li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="engagement-segmentation-framework" class="level1">
-<h1>2) Engagement Segmentation Framework</h1>
-<section id="day-post-signup-window" class="level2">
-<h2 class="anchored" data-anchor-id="day-post-signup-window">28-Day Post-Signup Window</h2>
-<p>All features calculated within:</p>
-<pre><code>signup_date → signup_date + 27 days</code></pre>
-</section>
-<section id="behavioral-features" class="level2">
-<h2 class="anchored" data-anchor-id="behavioral-features">Behavioral Features</h2>
-<ul>
-<li><code>active_days_28d</code></li>
-<li><code>minutes_28d</code></li>
-<li><code>titles_28d</code></li>
-<li><code>genres_28d</code></li>
-<li><code>completion_rate_28d</code></li>
-<li><code>spanish_share_28d</code></li>
-</ul>
-<hr>
-</section>
-<section id="sql-build-features-assign-segments" class="level2">
-<h2 class="anchored" data-anchor-id="sql-build-features-assign-segments">SQL: Build Features + Assign Segments</h2>
 <div class="cell">
-<details class="code-fold">
+<details open="" class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> user_id, <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    e.completed_flag,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    c.title,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    c.genre,</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    c.language</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>features_28d <span class="kw">AS</span> (</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.watch_date) <span class="kw">AS</span> active_days_28d,</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">SUM</span>(ev.minutes_watched) <span class="kw">AS</span> minutes_28d,</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.title) <span class="kw">AS</span> titles_28d,</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">COUNT</span>(<span class="kw">DISTINCT</span> ev.genre) <span class="kw">AS</span> genres_28d,</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">AVG</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> ev.completed_flag <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="kw">AS</span> completion_rate_28d,</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">SUM</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> ev.language<span class="op">=</span><span class="st">'Spanish'</span> <span class="cf">THEN</span> ev.minutes_watched <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="op">*</span> <span class="fl">1.0</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>      <span class="op">/</span> <span class="fu">NULLIF</span>(<span class="fu">SUM</span>(ev.minutes_watched), <span class="dv">0</span>) <span class="kw">AS</span> spanish_share_28d</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">27</span> <span class="dt">DAY</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>segmented <span class="kw">AS</span> (</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="op">*</span>,</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> minutes_28d <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> minutes_28d <span class="op">=</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="st">'No Engagement (0–28d)'</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> spanish_share_28d <span class="op">&gt;=</span> <span class="fl">0.70</span> <span class="kw">AND</span> active_days_28d <span class="op">&gt;=</span> <span class="dv">6</span> <span class="cf">THEN</span> <span class="st">'Spanish-First Loyalists'</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> active_days_28d <span class="op">&gt;=</span> <span class="dv">12</span> <span class="kw">AND</span> minutes_28d <span class="op">&gt;=</span> <span class="dv">1200</span> <span class="cf">THEN</span> <span class="st">'Superfans'</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> active_days_28d <span class="op">&lt;=</span> <span class="dv">5</span> <span class="kw">AND</span> minutes_28d <span class="op">&gt;=</span> <span class="dv">900</span> <span class="cf">THEN</span> <span class="st">'Bingers'</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> titles_28d <span class="op">&gt;=</span> <span class="dv">8</span> <span class="kw">AND</span> minutes_28d <span class="op">&lt;</span> <span class="dv">600</span> <span class="cf">THEN</span> <span class="st">'Browsers / Samplers'</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> active_days_28d <span class="op">&gt;=</span> <span class="dv">6</span> <span class="kw">OR</span> minutes_28d <span class="op">&gt;=</span> <span class="dv">600</span> <span class="cf">THEN</span> <span class="st">'Habitual Engagers'</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>      <span class="cf">ELSE</span> <span class="st">'Casual'</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> engagement_segment</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> features_28d</span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  engagement_segment,</span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">AVG</span>(minutes_28d) <span class="kw">AS</span> avg_minutes,</span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">AVG</span>(spanish_share_28d) <span class="kw">AS</span> avg_spanish_share</span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> segmented</span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> users <span class="kw">DESC</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">TABLE</span> churn_spanish_early_30d <span class="kw">AS</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> user_id, <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    c.language</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>spanish_early_flag <span class="kw">AS</span> (</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>    b.signup_date,</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span> <span class="cf">WHEN</span> <span class="fu">COUNT</span>(ev.user_id) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span> <span class="kw">AS</span> spanish_early</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span>,<span class="dv">2</span></span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>subs <span class="kw">AS</span> (</span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>    user_id,</span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_start,</span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(subscription_end <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> subscription_end</span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> subscriptions</span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>),</span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>retention_30d <span class="kw">AS</span> (</span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a>    f.user_id,</span>
+<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a>    f.spanish_early,</span>
+<span id="cb29-40"><a href="#cb29-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span></span>
+<span id="cb29-41"><a href="#cb29-41" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="kw">IS</span> <span class="kw">NULL</span> <span class="cf">THEN</span> <span class="dv">0</span></span>
+<span id="cb29-42"><a href="#cb29-42" aria-hidden="true" tabindex="-1"></a>      <span class="cf">WHEN</span> s.subscription_start <span class="op">&lt;=</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span></span>
+<span id="cb29-43"><a href="#cb29-43" aria-hidden="true" tabindex="-1"></a>       <span class="kw">AND</span> (s.subscription_end <span class="kw">IS</span> <span class="kw">NULL</span> <span class="kw">OR</span> s.subscription_end <span class="op">&gt;</span> f.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">30</span> <span class="dt">DAY</span>)</span>
+<span id="cb29-44"><a href="#cb29-44" aria-hidden="true" tabindex="-1"></a>      <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span></span>
+<span id="cb29-45"><a href="#cb29-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">END</span> <span class="kw">AS</span> retained_30d</span>
+<span id="cb29-46"><a href="#cb29-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> spanish_early_flag f</span>
+<span id="cb29-47"><a href="#cb29-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> subs s</span>
+<span id="cb29-48"><a href="#cb29-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> s.user_id <span class="op">=</span> f.user_id</span>
+<span id="cb29-49"><a href="#cb29-49" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-50"><a href="#cb29-50" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb29-51"><a href="#cb29-51" aria-hidden="true" tabindex="-1"></a>  spanish_early,</span>
+<span id="cb29-52"><a href="#cb29-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
+<span id="cb29-53"><a href="#cb29-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ROUND</span>(<span class="fu">AVG</span>(<span class="dv">1</span> <span class="op">-</span> retained_30d), <span class="dv">4</span>) <span class="kw">AS</span> churn_30d,</span>
+<span id="cb29-54"><a href="#cb29-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ROUND</span>(<span class="fu">AVG</span>(retained_30d), <span class="dv">4</span>)     <span class="kw">AS</span> retention_30d</span>
+<span id="cb29-55"><a href="#cb29-55" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> retention_30d</span>
+<span id="cb29-56"><a href="#cb29-56" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
+<span id="cb29-57"><a href="#cb29-57" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>4 records</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">engagement_segment</th>
-<th style="text-align: right;">users</th>
-<th style="text-align: right;">avg_minutes</th>
-<th style="text-align: right;">avg_spanish_share</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Casual</td>
-<td style="text-align: right;">2084</td>
-<td style="text-align: right;">141.7524</td>
-<td style="text-align: right;">0.7962273</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Spanish-First Loyalists</td>
-<td style="text-align: right;">238</td>
-<td style="text-align: right;">326.7185</td>
-<td style="text-align: right;">0.9170555</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">No Engagement (0–28d)</td>
-<td style="text-align: right;">152</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Habitual Engagers</td>
-<td style="text-align: right;">26</td>
-<td style="text-align: right;">330.8846</td>
-<td style="text-align: right;">0.6044571</td>
-</tr>
-</tbody>
-</table>
 </div>
-</div>
-<p><strong>Business Value</strong></p>
-<p>Segmentation enables:</p>
-<ul>
-<li>Franchise prioritization (Superfans)</li>
-<li>Next-best-series sequencing (Bingers)</li>
-<li>Spanish-first investment validation (Spanish-First Loyalists)</li>
-<li>Onboarding optimization (No Engagement)</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="churn-analysis" class="level1">
-<h1>3) Churn Analysis</h1>
-<section id="treatment" class="level2">
-<h2 class="anchored" data-anchor-id="treatment">Treatment</h2>
-<p>Watched Spanish content in first 7 days (≥2 minutes).</p>
-</section>
-<section id="outcome" class="level2">
-<h2 class="anchored" data-anchor-id="outcome">Outcome</h2>
-<p><code>subscriptions.churn_flag</code></p>
-<hr>
-</section>
-<section id="sql-unadjusted-churn-comparison" class="level2">
-<h2 class="anchored" data-anchor-id="sql-unadjusted-churn-comparison">SQL: Unadjusted Churn Comparison</h2>
 <div class="cell">
-<details class="code-fold">
+<details open="" class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> base_users <span class="kw">AS</span> (</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> user_id, <span class="fu">CAST</span>(signup_date <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> signup_date</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> users</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>events_enriched <span class="kw">AS</span> (</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    e.user_id,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">CAST</span>(e.watch_start <span class="kw">AS</span> <span class="dt">DATE</span>) <span class="kw">AS</span> watch_date,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    e.minutes_watched,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    c.language</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> streaming_events e</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">JOIN</span> content c <span class="kw">ON</span> e.content_id <span class="op">=</span> c.content_id</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>),</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>spanish_early_flag <span class="kw">AS</span> (</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    b.user_id,</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">CASE</span> <span class="cf">WHEN</span> <span class="fu">COUNT</span>(ev.user_id) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span> <span class="kw">AS</span> spanish_early</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> base_users b</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">LEFT</span> <span class="kw">JOIN</span> events_enriched ev</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> ev.user_id <span class="op">=</span> b.user_id</span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.watch_date <span class="kw">BETWEEN</span> b.signup_date <span class="kw">AND</span> b.signup_date <span class="op">+</span> <span class="dt">INTERVAL</span> <span class="dv">6</span> <span class="dt">DAY</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.language <span class="op">=</span> <span class="st">'Spanish'</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>   <span class="kw">AND</span> ev.minutes_watched <span class="op">&gt;=</span> <span class="dv">2</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  spanish_early,</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> users,</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">AVG</span>(<span class="cf">CASE</span> <span class="cf">WHEN</span> s.churn_flag <span class="cf">THEN</span> <span class="dv">1</span> <span class="cf">ELSE</span> <span class="dv">0</span> <span class="cf">END</span>) <span class="kw">AS</span> churn_rate</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> spanish_early_flag f</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> subscriptions s</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> f.user_id <span class="op">=</span> s.user_id</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> <span class="dv">1</span></span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dv">1</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> churn_spanish_early_30d</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">TO</span> <span class="st">'data/churn_spanish_early_30d.csv'</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>(<span class="kw">HEADER</span>, DELIMITER <span class="st">','</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<caption>2 records</caption>
-<thead>
-<tr class="header">
-<th style="text-align: left;">spanish_early</th>
-<th style="text-align: right;">users</th>
-<th style="text-align: right;">churn_rate</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">0</td>
-<td style="text-align: right;">1323</td>
-<td style="text-align: right;">0.4111867</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: right;">1177</td>
-<td style="text-align: right;">0.1996602</td>
-</tr>
-</tbody>
-</table>
 </div>
-</div>
-<p><strong>Observed Outcome</strong></p>
+</section>
+<section id="early-spanish-engagement-reduces-churn" class="level2">
+<h2 class="anchored" data-anchor-id="early-spanish-engagement-reduces-churn">Early Spanish Engagement Reduces Churn</h2>
+<p>Users who watch Spanish-language content in their first 7 days show:</p>
 <ul>
-<li>Non-Spanish-early churn: <strong>41.1%</strong></li>
-<li>Spanish-early churn: <strong>20.0%</strong></li>
-<li><strong>−21.1pp absolute reduction</strong></li>
-<li>~<strong>51% relative reduction</strong></li>
+<li><strong>5.2% 30-day churn</strong></li>
+<li>vs <strong>11.2%</strong> for non-Spanish-early users</li>
+<li><strong>−6.0pp absolute reduction</strong></li>
+<li>~<strong>54% relative churn reduction</strong></li>
 </ul>
-<hr>
+<p>Early Spanish exposure is strongly associated with subscription durability.</p>
+<p>This analysis is observational.<br>
+Users who watch Spanish content early may already have higher intrinsic engagement intent.<br>
+A controlled onboarding experiment would validate causality. —</p>
 </section>
 </section>
 <section id="robustness-checks" class="level1">
 <h1>Robustness Checks</h1>
-<p>Stratified by:</p>
+<p>To assess whether the early Spanish effect is confounded by user mix,<br>
+results were stratified by:</p>
 <ul>
-<li>Preferred language</li>
+<li>Preferred interface language (Spanish vs English)</li>
 <li>Acquisition channel</li>
 </ul>
-<p>Churn gap remains directionally consistent across strata, reducing (but not eliminating) concern that channel mix or language preference fully explains the effect.</p>
+<p>The 30-day churn reduction associated with early Spanish exposure<br>
+remains directionally consistent across strata.</p>
+<p>This reduces (but does not eliminate) the concern that channel mix or language preference fully explains the effect.</p>
 <hr>
 </section>
 <section id="limitations" class="level1">
 <h1>Limitations</h1>
 <ul>
-<li>Observational, not causal</li>
-<li>Self-selection bias likely</li>
-<li>Spanish catalog overrepresentation</li>
-<li>Churn_flag may not capture subscription pauses or re-subs</li>
+<li>Observational analysis — not causal</li>
+<li>Self-selection bias likely (higher-intent users may seek Spanish content early)</li>
+<li>Spanish catalog overrepresentation (8 of 10 titles are Spanish)</li>
+<li>30-day retention captures early durability only, not long-term value</li>
+<li>No control for marketing targeting or onboarding merchandising exposure</li>
 </ul>
 <hr>
 </section>
 <section id="recommended-next-steps" class="level1">
 <h1>Recommended Next Steps</h1>
-<ol type="1">
-<li>A/B test Spanish-first onboarding merchandising</li>
-<li>Propensity adjustment controlling for early engagement volume and channel</li>
-<li>Uplift modeling to identify users with incremental retention sensitivity</li>
-</ol>
+<ul>
+<li><p>A/B Test Spanish-Forward Onboarding<br>
+Randomize merchandising emphasis in the first 7 days<br>
+to measure incremental retention impact.</p></li>
+<li><p>Propensity-Adjusted Modeling<br>
+Control for acquisition channel, engagement intensity,<br>
+and user language preference.</p></li>
+<li><p>Early-Lifecycle Uplift Modeling<br>
+Identify users most sensitive to Spanish-first exposure<br>
+to prioritize targeted interventions.</p></li>
+<li><p>Extend to 60- and 90-Day Retention<br>
+Validate whether early Spanish alignment drives durable lifetime value.</p></li>
+</ul>
 
 
 </section>

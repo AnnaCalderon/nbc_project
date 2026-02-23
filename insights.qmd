@@ -16,20 +16,58 @@ execute:
   warning: false
 ---
 
-```{r setup, include=FALSE, message=FALSE, warning=FALSE}
-library(ggplot2)
+
+```{r include=FALSE, message=FALSE, warning=FALSE}
+library(readr)
 library(dplyr)
+library(ggplot2)
+library(scales)
 
-kpi <- data.frame(
-  group = c("Spanish Early (≤7d)", "Not Spanish Early"),
-  retention = c(94.8, 88.8),
-  churn = c(20.0, 41.1)
+```
+
+
+
+## Executive Summary
+
+### What Defines Success for Telemundo on Peacock?
+
+Success is driven by:
+
+• Early Spanish-language engagement in the first 7 days  
+• Sustained Spanish-affinity consumption  
+• High-intensity viewing behavior  
+
+Spanish-dominant users demonstrate stronger durability and drive disproportionate watch time.
+
+## Most Important Insight
+
+### Early Spanish Exposure = Durable Subscribers  
+
+- **95% retention vs 89% baseline**  
+- **+6pp 30-day lift**
+
+**Implication:** Prioritize Spanish-first onboarding in Week 1.
+
+```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="70%"}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+kpi <- read_csv("data/clean_retention_early_group_30d.csv") %>%
+  mutate(
+    retention = retention_30d * 100,
+    group = early_group
+  ) %>%
+  arrange(desc(retention)) %>%
+  mutate(group = factor(group, levels = group))
+
+group_colors <- c(
+  "Spanish Early Only" = "#1f77b4",
+  "Both Languages Early" = "#4c78a8",
+  "No Early Engagement" = "#9aa0a6",
+  "English Early Only" = "#c0c4c9"
 )
-
-# Color mapping (Spanish Early vs Not)
-kpi$group <- factor(kpi$group, levels = c("Spanish Early (≤7d)", "Not Spanish Early"))
-group_colors <- c("Spanish Early (≤7d)" = "#1f77b4",  # blue
-                  "Not Spanish Early"   = "#9aa0a6")  # soft gray
 
 base_theme <- theme_minimal(base_size = 20) +
   theme(
@@ -43,86 +81,211 @@ base_theme <- theme_minimal(base_size = 20) +
     legend.position = "none"
   )
 
-```
+# Baseline reference line
+baseline <- kpi$retention[kpi$group == "No Early Engagement"][1]
 
-## What Defines Success for Telemundo on Peacock
-
-### Success = Subscription Durability
-
-Telemundo content must:
-
-- Drive early engagement (first 7 days)
-- Increase **30-day retention**
-- Reduce **churn**
-- Build durable viewing habit
-
-Success is not viewership alone —  
-it is **measurable impact on retention and lifetime value.**
-
-
-## Most Important Insight
-
-### Early Spanish Engagement Predicts Retention
-
-```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="75%"}
 ggplot(kpi, aes(x = group, y = retention, fill = group)) +
   geom_col(width = 0.55) +
+  
+  # Thinner dashed baseline
+  geom_hline(
+    yintercept = baseline,
+    linetype = "dashed",
+    linewidth = 0.6,   # thinner line
+    color = "black"
+  ) +
+  
   geom_text(
-    aes(label = paste0(retention, "%")),
-    vjust = 1.3,              # pushes text down inside the bar
-    color = "white",          # makes text readable on dark blue
+    aes(label = paste0(round(retention, 1), "%")),
+    vjust = 1.3,
+    color = "white",
     size = 6,
     fontface = "bold"
   ) +
+  
+  # Baseline label moved to right side and above line
+annotate(
+  "text",
+  x = 0.7,                        # slightly before first bar
+  y = baseline + 7,
+  label = paste0("Baseline: ", round(baseline, 1), "%"),
+  hjust = 0,
+  size = 5,
+  fontface = "bold",
+  color = "black"
+)+
+  
   scale_fill_manual(values = group_colors) +
   scale_y_continuous(
     limits = c(0, 100),
-    breaks = seq(0,100,20),
-    expand = c(0,0)
+    breaks = seq(0, 100, 20),
+    expand = c(0, 0)
   ) +
   labs(
-    title = "30-Day Retention",
+    title = "30-Day Retention by Early Language Exposure",
     y = NULL
   ) +
   base_theme +
   theme(
-    axis.text.x = element_text(size = 14),
+    axis.text.x = element_text(size = 14, angle = 15, hjust = 1),
     plot.margin = margin(20, 20, 20, 20)
   )
 ```
-- **94.8%** vs **88.8%** retention
-- **+6pp retention lift** for Spanish-early viewers
 
+### Engagement Concentration Drives Economic Value
+## Value Is Concentrated
 
-## Churn Reduction
+- 38% of users drive 63% of total minutes
+- High-intensity Spanish viewers power platform economics
 
-### Spanish Early Engagement = Lower Churn
+**Strategic Priority:** Protect and deepen this segment.
+```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="70%"}
 
-Spanish-language content:
-```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="75%"}
-ggplot(kpi, aes(x = group, y = churn, fill = group)) +
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(scales)
+library(readr)
+
+# Load data
+cluster_profile <- read_csv("data/cluster_profile.csv") %>%
+  mutate(
+    pct_users = as.numeric(sub("%", "", pct_users)) / 100,
+    pct_total_minutes = as.numeric(sub("%", "", pct_total_minutes)) / 100
+  )
+
+# Order clusters strategically
+cluster_profile$cluster_name <- factor(
+  cluster_profile$cluster_name,
+  levels = c(
+    "Spanish Power Users",
+    "Spanish-Light Users",
+    "English-First / At-Risk"
+  )
+)
+
+# Reshape for plotting
+plot_df <- cluster_profile %>%
+  select(cluster_name, pct_users, pct_total_minutes) %>%
+  pivot_longer(
+    cols = c(pct_users, pct_total_minutes),
+    names_to = "metric",
+    values_to = "value"
+  )
+
+# Plot
+ggplot(plot_df, aes(x = cluster_name, y = value, fill = metric)) +
+  
+  geom_col(position = "dodge", width = 0.7) +
+  
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  
+  scale_fill_manual(
+    values = c(
+      "pct_total_minutes" = "#F05A54",
+      "pct_users" = "#2CA6A4"
+    ),
+    labels = c(
+      "pct_total_minutes" = "Share of Total Minutes",
+      "pct_users" = "Share of Users"
+    )
+  ) +
+  
+  labs(
+    title = "Spanish Power Users Drive Disproportionate Value",
+    subtitle = "Comparison of User Share vs Total Viewing Share",
+    x = NULL,
+    y = NULL,
+    fill = NULL
+  ) +
+  
+  theme_minimal(base_size = 18) +
+  
+  theme(
+    plot.title = element_text(face = "bold", size = 26),
+    plot.subtitle = element_text(size = 18),
+    legend.position = "top",
+    legend.text = element_text(size = 14),
+    axis.text.x = element_text(size = 16),
+    panel.grid.minor = element_blank()
+  )
+```
+
+## Early Spanish Engagement Reduces Churn
+
+- 5.2% vs 11.2% 30-day churn  
+- −6pp absolute lift  
+- ~54% lower churn
+
+**Action:** Prioritize Spanish-forward onboarding in Week 1.
+```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="70%"}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+churn_kpi <- read_csv("data/churn_spanish_early_30d.csv") %>%
+  mutate(
+    group = ifelse(spanish_early == 1, "Spanish Early (≤7d)", "Not Spanish Early"),
+    churn = churn_30d * 100
+  ) %>%
+  select(group, users, churn) %>%
+  mutate(group = factor(group, levels = c("Spanish Early (≤7d)", "Not Spanish Early")))
+
+group_colors <- c(
+  "Spanish Early (≤7d)" = "#1f77b4",
+  "Not Spanish Early"   = "#9aa0a6"
+)
+
+baseline <- churn_kpi$churn[churn_kpi$group == "Not Spanish Early"][1]
+
+ggplot(churn_kpi, aes(x = group, y = churn, fill = group)) +
   geom_col(width = 0.55) +
+  
+  # Baseline (Not Spanish Early)
+  geom_hline(
+    yintercept = baseline,
+    linetype = "dashed",
+    linewidth = 0.6,
+    color = "black"
+  ) +
+  
+  # % labels above bars
   geom_text(
-    aes(label = paste0(churn, "%")),
+    aes(label = paste0(round(churn, 1), "%")),
     vjust = -0.6,
+    color = "black",
     size = 6,
     fontface = "bold"
   ) +
+  
+  # Baseline label on right side, slightly above line
+
+  
   scale_fill_manual(values = group_colors) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0,100,20), expand = c(0,0)) +
+  scale_y_continuous(
+    limits = c(0, max(churn_kpi$churn) + 3),
+    breaks = seq(0, 20, 5),
+    expand = c(0, 0)
+  ) +
   labs(
-    title = "Churn Rate",
+    title = "30-Day Churn by Early Spanish Exposure",
     y = NULL
   ) +
-  base_theme +
+  theme_minimal(base_size = 20) +
   theme(
-    axis.text.x = element_text(size = 14),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 24),
+    plot.title.position = "plot",
+    legend.position = "none",
     plot.margin = margin(20, 20, 20, 20)
   )
 ```
-- **20.0%** vs **41.1%** churn
-- **~50% lower churn** among Spanish-early users
-- Pattern holds across preferred language and acquisition channel
+
+
 
 ## What We Should Prioritize Next Quarter
 
@@ -136,8 +299,3 @@ Surface high-retention franchises and starter packs.
 
 **3. Measure incrementality**  
 Quantify retention lift controlling for channel and language.
-
-**Objective:** Maximize durable subscription value through early Spanish engagement.
-
-
-
