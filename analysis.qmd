@@ -1,0 +1,349 @@
+---
+title: "Analysis"
+format:
+  html:
+    theme: cosmo
+    code-fold: true
+    toc: true
+    toc-depth: 1
+---
+
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+library(DBI)
+library(duckdb)
+library(readxl)
+
+con <- dbConnect(duckdb::duckdb(), dbdir = "telemundo.duckdb")
+
+# Enable ICU (required in some macOS environments)
+dbExecute(con, "INSTALL icu;")
+dbExecute(con, "LOAD icu;")
+
+users <- read_excel("data/users.xlsx")
+subscriptions <- read_excel("data/subscriptions.xlsx")
+streaming_events <- read_excel("data/streaming_events.xlsx")
+content <- read_excel("data/content.xlsx")
+
+dbWriteTable(con, "users", users, overwrite = TRUE)
+dbWriteTable(con, "subscriptions", subscriptions, overwrite = TRUE)
+dbWriteTable(con, "streaming_events", streaming_events, overwrite = TRUE)
+dbWriteTable(con, "content", content, overwrite = TRUE)
+```
+
+
+# Business Context
+
+Telemundo content is available on Peacock (SVOD).  
+The objective is to evaluate how **Spanish-language content** drives:
+
+- Acquisition quality (early engagement signals)
+- Engagement depth and behavior
+- Retention and churn (subscription durability)
+
+
+
+# Data Model & Definitions
+
+## Table Joins
+
+- `users.user_id` is the user-level grain.
+- `subscriptions.user_id = users.user_id`
+- `streaming_events.user_id = users.user_id`
+- `streaming_events.content_id = content.content_id`
+
+## Spanish Content Definition
+
+Spanish-language content is defined as:
+
+```
+content.language = 'Spanish'
+```
+
+Minimum meaningful exposure:
+
+```
+- minutes_watched >= 2
+```
+
+(Assumption: <2 minutes likely accidental playback.)
+
+
+# 1) Cohort Retention Analysis (30-Day)
+
+## Cohort Logic
+
+Users who watched Spanish-language content within their **first 7 days post-signup**:
+
+- Exposure window: Day 0–6 after `signup_date`
+- Spanish content only
+- ≥ 2 minutes watched
+
+## Retention Definition
+
+30-day retention = subscription active on Day 30:
+
+- `subscription_start <= signup_date + 30 days`
+AND
+- `subscription_end IS NULL OR subscription_end > signup_date + 30 days`
+
+
+
+## SQL (30-day retention for Spanish-early cohort)
+```{sql connection=con}
+-- selecting user and signup date
+WITH base_users AS (
+  SELECT
+    user_id,
+    CAST(signup_date AS DATE) AS signup_date
+  FROM users
+),
+
+-- streaming events left join content by content id
+events_enriched AS (
+  SELECT
+    e.user_id,
+    CAST(e.watch_start AS DATE) AS watch_date,
+    e.minutes_watched,
+    c.language
+  FROM streaming_events e
+  JOIN content c
+    ON e.content_id = c.content_id
+),
+
+spanish_early_flag AS (
+  SELECT
+    b.user_id,
+    b.signup_date,
+    CASE WHEN COUNT(ev.user_id) > 0 THEN 1 ELSE 0 END AS spanish_early
+  FROM base_users b
+  LEFT JOIN events_enriched ev
+    ON ev.user_id = b.user_id
+   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
+   AND ev.language = 'Spanish'
+   AND ev.minutes_watched >= 2
+  GROUP BY 1,2
+),
+
+ret30 AS (
+  SELECT
+    f.user_id,
+    f.spanish_early,
+    CASE
+      WHEN s.subscription_start <= f.signup_date + INTERVAL 30 DAY
+       AND (s.subscription_end IS NULL OR s.subscription_end > f.signup_date + INTERVAL 30 DAY)
+      THEN 1 ELSE 0
+    END AS retained_30d
+  FROM spanish_early_flag f
+  LEFT JOIN subscriptions s
+    ON s.user_id = f.user_id
+)
+
+SELECT
+  spanish_early,
+  COUNT(*) AS users,
+  AVG(retained_30d) AS retention_30d
+FROM ret30
+GROUP BY 1
+ORDER BY 1;
+```
+
+
+**Result Interpretation**
+
+Early Spanish exposure is associated with higher 30-day retention:
+
+- Spanish-early: **94.8%**
+- Non-Spanish-early: **88.8%**
+- **+6.0pp retention lift**
+
+---
+
+# 2) Engagement Segmentation Framework
+
+## 28-Day Post-Signup Window
+
+All features calculated within:
+
+```
+signup_date → signup_date + 27 days
+```
+
+## Behavioral Features
+
+- `active_days_28d`
+- `minutes_28d`
+- `titles_28d`
+- `genres_28d`
+- `completion_rate_28d`
+- `spanish_share_28d`
+
+---
+
+## SQL: Build Features + Assign Segments
+
+```{sql connection=con}
+WITH base_users AS (
+  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
+  FROM users
+),
+
+events_enriched AS (
+  SELECT
+    e.user_id,
+    CAST(e.watch_start AS DATE) AS watch_date,
+    e.minutes_watched,
+    e.completed_flag,
+    c.title,
+    c.genre,
+    c.language
+  FROM streaming_events e
+  JOIN content c
+    ON e.content_id = c.content_id
+),
+
+features_28d AS (
+  SELECT
+    b.user_id,
+    COUNT(DISTINCT ev.watch_date) AS active_days_28d,
+    SUM(ev.minutes_watched) AS minutes_28d,
+    COUNT(DISTINCT ev.title) AS titles_28d,
+    COUNT(DISTINCT ev.genre) AS genres_28d,
+    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,
+    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0
+      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d
+  FROM base_users b
+  LEFT JOIN events_enriched ev
+    ON ev.user_id = b.user_id
+   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 27 DAY
+  GROUP BY 1
+),
+
+segmented AS (
+  SELECT *,
+    CASE
+      WHEN minutes_28d IS NULL OR minutes_28d = 0 THEN 'No Engagement (0–28d)'
+      WHEN spanish_share_28d >= 0.70 AND active_days_28d >= 6 THEN 'Spanish-First Loyalists'
+      WHEN active_days_28d >= 12 AND minutes_28d >= 1200 THEN 'Superfans'
+      WHEN active_days_28d <= 5 AND minutes_28d >= 900 THEN 'Bingers'
+      WHEN titles_28d >= 8 AND minutes_28d < 600 THEN 'Browsers / Samplers'
+      WHEN active_days_28d >= 6 OR minutes_28d >= 600 THEN 'Habitual Engagers'
+      ELSE 'Casual'
+    END AS engagement_segment
+  FROM features_28d
+)
+
+SELECT
+  engagement_segment,
+  COUNT(*) AS users,
+  AVG(minutes_28d) AS avg_minutes,
+  AVG(spanish_share_28d) AS avg_spanish_share
+FROM segmented
+GROUP BY 1
+ORDER BY users DESC;
+```
+
+**Business Value**
+
+Segmentation enables:
+
+- Franchise prioritization (Superfans)
+- Next-best-series sequencing (Bingers)
+- Spanish-first investment validation (Spanish-First Loyalists)
+- Onboarding optimization (No Engagement)
+
+---
+
+# 3) Churn Analysis
+
+## Treatment
+
+Watched Spanish content in first 7 days (≥2 minutes).
+
+## Outcome
+
+`subscriptions.churn_flag`
+
+---
+
+## SQL: Unadjusted Churn Comparison
+
+```{sql connection=con}
+WITH base_users AS (
+  SELECT user_id, CAST(signup_date AS DATE) AS signup_date
+  FROM users
+),
+
+events_enriched AS (
+  SELECT
+    e.user_id,
+    CAST(e.watch_start AS DATE) AS watch_date,
+    e.minutes_watched,
+    c.language
+  FROM streaming_events e
+  JOIN content c ON e.content_id = c.content_id
+),
+
+spanish_early_flag AS (
+  SELECT
+    b.user_id,
+    CASE WHEN COUNT(ev.user_id) > 0 THEN 1 ELSE 0 END AS spanish_early
+  FROM base_users b
+  LEFT JOIN events_enriched ev
+    ON ev.user_id = b.user_id
+   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY
+   AND ev.language = 'Spanish'
+   AND ev.minutes_watched >= 2
+  GROUP BY 1
+)
+
+SELECT
+  spanish_early,
+  COUNT(*) AS users,
+  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate
+FROM spanish_early_flag f
+JOIN subscriptions s
+  ON f.user_id = s.user_id
+GROUP BY 1
+ORDER BY 1;
+```
+
+**Observed Outcome**
+
+- Non-Spanish-early churn: **41.1%**
+- Spanish-early churn: **20.0%**
+- **−21.1pp absolute reduction**
+- ~**51% relative reduction**
+
+---
+
+# Robustness Checks
+
+Stratified by:
+
+- Preferred language
+- Acquisition channel
+
+Churn gap remains directionally consistent across strata, reducing (but not eliminating) concern that channel mix or language preference fully explains the effect.
+
+---
+
+# Limitations
+
+- Observational, not causal
+- Self-selection bias likely
+- Spanish catalog overrepresentation
+- Churn_flag may not capture subscription pauses or re-subs
+
+---
+
+# Recommended Next Steps
+
+1. A/B test Spanish-first onboarding merchandising
+2. Propensity adjustment controlling for early engagement volume and channel
+3. Uplift modeling to identify users with incremental retention sensitivity
+
+
+```{r close-connection, include=FALSE, message=FALSE, warning=FALSE}
+dbDisconnect(con, shutdown = TRUE)
+```

@@ -1,0 +1,38 @@
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const button = document.createElement("button");
+  button.innerText = "Hide All Code";
+
+  button.style.position = "fixed";
+  button.style.top = "15px";
+  button.style.right = "20px";
+  button.style.zIndex = "1000";
+  button.style.padding = "8px 14px";
+  button.style.fontSize = "14px";
+  button.style.fontWeight = "600";
+  button.style.backgroundColor = "#1f77b4";
+  button.style.color = "white";
+  button.style.border = "none";
+  button.style.borderRadius = "6px";
+  button.style.cursor = "pointer";
+  button.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+
+  let expanded = true;
+
+  button.onclick = function () {
+    const blocks = document.querySelectorAll("details");
+
+    if (expanded) {
+      blocks.forEach(el => el.open = false);
+      button.innerText = "Show All Code";
+    } else {
+      blocks.forEach(el => el.open = true);
+      button.innerText = "Hide All Code";
+    }
+
+    expanded = !expanded;
+  };
+
+  document.body.appendChild(button);
+});
+</script>

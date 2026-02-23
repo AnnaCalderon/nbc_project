@@ -1,0 +1,118 @@
+/* styles.css
+   Professional RevealJS polish for Quarto slides
+   Matches your chart blue: #1f77b4
+*/
+
+:root{
+  --brand-blue: #1f77b4;
+  --soft-gray: #9aa0a6;
+  --text: #111827;       /* near-black */
+  --muted: #4b5563;      /* gray */
+  --card: rgba(17, 24, 39, 0.06);
+}
+
+/* Overall typography + spacing */
+.reveal{
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text);
+}
+
+.reveal .slides{
+  text-align: left;
+}
+
+.reveal section{
+  line-height: 1.25;
+}
+
+/* Title and headers */
+.reveal h1{
+  font-size: 2.15em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.35em;
+}
+
+.reveal h2{
+  font-size: 1.55em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--brand-blue);
+  margin-bottom: 0.45em;
+}
+
+.reveal h3{
+  font-size: 1.18em;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 0.15em;
+  margin-bottom: 0.6em;
+}
+
+/* Lists */
+.reveal ul{
+  margin-top: 0.35em;
+  margin-bottom: 0.25em;
+}
+
+.reveal li{
+  margin: 0.20em 0;
+}
+
+/* Bold emphasis */
+.reveal strong{
+  font-weight: 800;
+}
+
+/* Make code less visually loud (since you hide echo) */
+.reveal pre code{
+  font-size: 0.85em;
+  line-height: 1.25;
+}
+
+/* Optional: a subtle callout card you can use if you want
+   Usage in markdown:
+   ::: {.callout}
+   text
+   :::
+*/
+.reveal .callout{
+  border-left: 6px solid var(--brand-blue);
+  background: var(--card);
+  padding: 0.75em 0.95em;
+  border-radius: 14px;
+  margin-top: 0.55em;
+}
+
+/* Optional: small “KPI” styling for a big number line
+   Usage: <span class="kpi">+6pp</span>
+*/
+.reveal .kpi{
+  color: var(--brand-blue);
+  font-weight: 900;
+}
+
+/* Slide number styling */
+.reveal .slide-number{
+  font-size: 12px !important;
+  opacity: 0.65;
+}
+
+/* Images/plots */
+.reveal img{
+  border-radius: 14px;
+}
+
+/* Tighten vertical spacing between paragraphs */
+.reveal p{
+  margin: 0.35em 0;
+}
+
+
+/* Hide Quarto code tools toolbar (search/magnifier, etc.) */
+.code-tools,
+.code-tools-button,
+.code-tools-container,
+div.sourceCode > .code-tools {
+  display: none !important;
+}

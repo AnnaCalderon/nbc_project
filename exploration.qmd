@@ -1,0 +1,166 @@
+---
+title: "Exploration"
+format:
+  html:
+    theme: cosmo
+    code-fold: show
+    code-tools: false
+    toc: false
+    toc-depth: 3
+include-in-header: expand-all.html
+---
+
+# Exploratory Analysis
+
+This document validates the data model, defines early Spanish-language exposure, and constructs initial retention and churn metrics to assess the relationship between early content consumption and subscriber durability.
+
+
+## Load Data
+
+
+```{r setup, include=FALSE}
+library(DBI)
+library(duckdb)
+library(readxl)
+
+con <- dbConnect(duckdb::duckdb(), dbdir = "telemundo.duckdb")
+
+# macOS DuckDB fix
+dbExecute(con, "INSTALL icu;")
+dbExecute(con, "LOAD icu;")
+
+users <- read_excel("data/users.xlsx")
+subscriptions <- read_excel("data/subscriptions.xlsx")
+streaming_events <- read_excel("data/streaming_events.xlsx")
+content <- read_excel("data/content.xlsx")
+
+dbWriteTable(con, "users", users, overwrite = TRUE)
+dbWriteTable(con, "subscriptions", subscriptions, overwrite = TRUE)
+dbWriteTable(con, "streaming_events", streaming_events, overwrite = TRUE)
+dbWriteTable(con, "content", content, overwrite = TRUE)
+```
+
+
+## 1. What columns do I have?
+
+```{sql connection=con}
+DESCRIBE users;
+
+```
+
+```{sql connection=con}
+DESCRIBE subscriptions;
+
+```
+
+```{sql connection=con}
+DESCRIBE streaming_events;
+
+```
+
+```{sql connection=con}
+DESCRIBE content;
+```
+
+## 2. Quick peek at sample rows (to confirm column names + formats)
+```{sql connection=con}
+SELECT * FROM users LIMIT 5;
+```
+
+```{sql connection=con}
+SELECT * FROM subscriptions LIMIT 5;
+```
+
+```{sql connection=con}
+SELECT * FROM streaming_events LIMIT 5;
+```
+
+```{sql connection=con}
+SELECT * FROM content LIMIT 5;
+```
+
+## Variable Level Distribution
+
+Before retention analysis, we inspect categorical variables
+to understand base composition and potential confounders.
+
+### Preferred Language Distribution
+```{sql connection=con}
+SELECT 
+  preferred_language,
+  COUNT(*) AS users,
+  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users
+FROM users
+GROUP BY preferred_language
+ORDER BY users DESC;
+```
+
+### Acquisition Channel Distribution
+```{sql connection=con}
+-- percentage of total users that came from each acquisition channel
+SELECT 
+  acquisition_channel,
+  COUNT(*) AS users,
+  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users
+FROM users
+GROUP BY acquisition_channel
+ORDER BY users DESC;
+```
+
+### Content Language Distribution (Catalog Mix)
+```{sql connection=con}
+SELECT 
+  language,
+  COUNT(*) AS titles
+FROM content
+GROUP BY language
+ORDER BY titles DESC;
+```
+
+### Watch Volume by Content Language
+```{sql connection=con}
+SELECT 
+  c.language,
+  COUNT(*) AS total_views,
+  ROUND(SUM(e.minutes_watched), 0) AS total_minutes
+FROM streaming_events e
+LEFT JOIN content c
+  ON e.content_id = c.content_id
+GROUP BY c.language
+ORDER BY total_minutes DESC;
+```
+
+### Cross Tab: Preferred Language vs Watched Language
+```{sql connection=con}
+WITH user_watch_language AS (
+  SELECT
+    e.user_id,
+    c.language,
+    SUM(e.minutes_watched) AS total_minutes
+  FROM streaming_events e
+  LEFT JOIN content c
+    ON e.content_id = c.content_id
+  GROUP BY 1,2
+),
+
+dominant_language AS (
+  SELECT *
+  FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total_minutes DESC) AS rn
+    FROM user_watch_language
+  )
+  WHERE rn = 1
+)
+
+SELECT
+  u.preferred_language,
+  d.language AS dominant_watch_language,
+  COUNT(*) AS users
+FROM dominant_language d
+JOIN users u
+  ON d.user_id = u.user_id
+GROUP BY 1,2
+ORDER BY users DESC;
+```
+

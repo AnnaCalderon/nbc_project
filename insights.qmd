@@ -1,0 +1,143 @@
+---
+title: "Telemundo on Peacock — Executive Summary"
+format:
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: fade
+    css: styles.css
+    center: true
+    width: 1280
+    height: 720
+    auto-stretch: false
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+
+kpi <- data.frame(
+  group = c("Spanish Early (≤7d)", "Not Spanish Early"),
+  retention = c(94.8, 88.8),
+  churn = c(20.0, 41.1)
+)
+
+# Color mapping (Spanish Early vs Not)
+kpi$group <- factor(kpi$group, levels = c("Spanish Early (≤7d)", "Not Spanish Early"))
+group_colors <- c("Spanish Early (≤7d)" = "#1f77b4",  # blue
+                  "Not Spanish Early"   = "#9aa0a6")  # soft gray
+
+base_theme <- theme_minimal(base_size = 20) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", size = 24),
+    plot.title.position = "plot",
+    legend.position = "none"
+  )
+
+```
+
+## What Defines Success for Telemundo on Peacock
+
+### Success = Subscription Durability
+
+Telemundo content must:
+
+- Drive early engagement (first 7 days)
+- Increase **30-day retention**
+- Reduce **churn**
+- Build durable viewing habit
+
+Success is not viewership alone —  
+it is **measurable impact on retention and lifetime value.**
+
+
+## Most Important Insight
+
+### Early Spanish Engagement Predicts Retention
+
+```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="75%"}
+ggplot(kpi, aes(x = group, y = retention, fill = group)) +
+  geom_col(width = 0.55) +
+  geom_text(
+    aes(label = paste0(retention, "%")),
+    vjust = 1.3,              # pushes text down inside the bar
+    color = "white",          # makes text readable on dark blue
+    size = 6,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = group_colors) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0,100,20),
+    expand = c(0,0)
+  ) +
+  labs(
+    title = "30-Day Retention",
+    y = NULL
+  ) +
+  base_theme +
+  theme(
+    axis.text.x = element_text(size = 14),
+    plot.margin = margin(20, 20, 20, 20)
+  )
+```
+- **94.8%** vs **88.8%** retention
+- **+6pp retention lift** for Spanish-early viewers
+
+
+## Churn Reduction
+
+### Spanish Early Engagement = Lower Churn
+
+Spanish-language content:
+```{r echo=FALSE, fig.height=3.8, fig.width=10, out.width="75%"}
+ggplot(kpi, aes(x = group, y = churn, fill = group)) +
+  geom_col(width = 0.55) +
+  geom_text(
+    aes(label = paste0(churn, "%")),
+    vjust = -0.6,
+    size = 6,
+    fontface = "bold"
+  ) +
+  scale_fill_manual(values = group_colors) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0,100,20), expand = c(0,0)) +
+  labs(
+    title = "Churn Rate",
+    y = NULL
+  ) +
+  base_theme +
+  theme(
+    axis.text.x = element_text(size = 14),
+    plot.margin = margin(20, 20, 20, 20)
+  )
+```
+- **20.0%** vs **41.1%** churn
+- **~50% lower churn** among Spanish-early users
+- Pattern holds across preferred language and acquisition channel
+
+## What We Should Prioritize Next Quarter
+
+### Action Plan
+
+**1. Run Spanish-first onboarding A/B test**  
+Increase visibility of Telemundo content in first-session UX.
+
+**2. Optimize merchandising for new users**  
+Surface high-retention franchises and starter packs.
+
+**3. Measure incrementality**  
+Quantify retention lift controlling for channel and language.
+
+**Objective:** Maximize durable subscription value through early Spanish engagement.
+
+
+

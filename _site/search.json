@@ -1,0 +1,513 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "nbc_project",
+    "section": "",
+    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.\n\nlibrary(DBI)\nlibrary(duckdb)\nlibrary(readxl)\n\ncon &lt;- dbConnect(duckdb::duckdb(), dbdir = \"telemundo.duckdb\")\n\n\nusers &lt;- read_excel(\"data/users.xlsx\")\nsubscriptions &lt;- read_excel(\"data/subscriptions.xlsx\")\nstreaming_events &lt;- read_excel(\"data/streaming_events.xlsx\")\ncontent &lt;- read_excel(\"data/content.xlsx\")\n\ndbWriteTable(con, \"users\", users, overwrite = TRUE)\ndbWriteTable(con, \"subscriptions\", subscriptions, overwrite = TRUE)\ndbWriteTable(con, \"streaming_events\", streaming_events, overwrite = TRUE)\ndbWriteTable(con, \"content\", content, overwrite = TRUE)\n\n\nSELECT *\nFROM users\nLIMIT 10;\n\n\nDisplaying records 1 - 10\n\n\nuser_id\nsignup_date\npreferred_language\nacquisition_channel\n\n\n\n\n1\n2025-03-08\nSpanish\nCRM Re-engagement\n\n\n2\n2025-01-18\nSpanish\nPaid Social\n\n\n3\n2025-03-25\nSpanish\nCRM Re-engagement\n\n\n4\n2025-02-27\nSpanish\nPaid Search\n\n\n5\n2025-03-28\nSpanish\nOrganic\n\n\n6\n2025-02-17\nSpanish\nCRM Re-engagement\n\n\n7\n2025-03-15\nSpanish\nAffiliate\n\n\n8\n2025-02-02\nEnglish\nPaid Social\n\n\n9\n2025-02-16\nEnglish\nPaid Search\n\n\n10\n2025-01-26\nSpanish\nPaid Search"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site\n\n1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "exploration.html",
+    "href": "exploration.html",
+    "title": "Exploration",
+    "section": "",
+    "text": "This document validates the data model, defines early Spanish-language exposure, and constructs initial retention and churn metrics to assess the relationship between early content consumption and subscriber durability.\n\n\n\n\n\n\n\nCode\nDESCRIBE users;\n\n\n\n4 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nsignup_date\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\npreferred_language\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nacquisition_channel\nVARCHAR\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE subscriptions;\n\n\n\n4 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nsubscription_start\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nsubscription_end\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nchurn_flag\nBOOLEAN\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE streaming_events;\n\n\n\n5 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ncontent_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nwatch_start\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nminutes_watched\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ncompleted_flag\nBOOLEAN\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE content;\n\n\n\n5 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\ncontent_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ntitle\nVARCHAR\nYES\nNA\nNA\nNA\n\n\ngenre\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nlanguage\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nrelease_date\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\n\n\n\nCode\nSELECT * FROM users LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\nsignup_date\npreferred_language\nacquisition_channel\n\n\n\n\n1\n2025-03-08\nSpanish\nCRM Re-engagement\n\n\n2\n2025-01-18\nSpanish\nPaid Social\n\n\n3\n2025-03-25\nSpanish\nCRM Re-engagement\n\n\n4\n2025-02-27\nSpanish\nPaid Search\n\n\n5\n2025-03-28\nSpanish\nOrganic\n\n\n\n\n\n\n\nCode\nSELECT * FROM subscriptions LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\nsubscription_start\nsubscription_end\nchurn_flag\n\n\n\n\n1\n2025-03-08\nNA\nFALSE\n\n\n2\n2025-01-18\nNA\nFALSE\n\n\n3\n2025-03-25\nNA\nFALSE\n\n\n4\n2025-02-27\nNA\nFALSE\n\n\n5\n2025-03-28\nNA\nFALSE\n\n\n\n\n\n\n\nCode\nSELECT * FROM streaming_events LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\ncontent_id\nwatch_start\nminutes_watched\ncompleted_flag\n\n\n\n\n1\n101\n2025-03-22\n61\nTRUE\n\n\n1\n105\n2025-03-09\n51\nFALSE\n\n\n1\n102\n2025-04-12\n28\nFALSE\n\n\n1\n107\n2025-03-27\n62\nTRUE\n\n\n1\n105\n2025-03-13\n89\nTRUE\n\n\n\n\n\n\n\nCode\nSELECT * FROM content LIMIT 5;\n\n\n\n5 records\n\n\ncontent_id\ntitle\ngenre\nlanguage\nrelease_date\n\n\n\n\n101\nLa Reina del Sur\nDrama\nSpanish\n2024-01-01\n\n\n102\nCaso Cerrado\nReality\nSpanish\n2024-01-31\n\n\n103\nEl Senor de los Cielos\nDrama\nSpanish\n2024-03-01\n\n\n104\nLa Casa de los Famosos\nReality\nSpanish\n2024-03-31\n\n\n105\nNoticias Telemundo\nNews\nSpanish\n2024-04-30\n\n\n\n\n\n\n\n\nBefore retention analysis, we inspect categorical variables to understand base composition and potential confounders.\n\n\n\n\nCode\nSELECT \n  preferred_language,\n  COUNT(*) AS users,\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users\nFROM users\nGROUP BY preferred_language\nORDER BY users DESC;\n\n\n\n2 records\n\n\npreferred_language\nusers\npct_users\n\n\n\n\nSpanish\n1880\n75.2\n\n\nEnglish\n620\n24.8\n\n\n\n\n\n\n\n\n\n\nCode\n-- percentage of total users that came from each acquisition channel\nSELECT \n  acquisition_channel,\n  COUNT(*) AS users,\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users\nFROM users\nGROUP BY acquisition_channel\nORDER BY users DESC;\n\n\n\n5 records\n\n\nacquisition_channel\nusers\npct_users\n\n\n\n\nCRM Re-engagement\n525\n21.00\n\n\nAffiliate\n520\n20.80\n\n\nPaid Search\n493\n19.72\n\n\nPaid Social\n482\n19.28\n\n\nOrganic\n480\n19.20\n\n\n\n\n\n\n\n\n\n\nCode\nSELECT \n  language,\n  COUNT(*) AS titles\nFROM content\nGROUP BY language\nORDER BY titles DESC;\n\n\n\n2 records\n\n\nlanguage\ntitles\n\n\n\n\nSpanish\n8\n\n\nEnglish\n2\n\n\n\n\n\n\n\n\n\n\nCode\nSELECT \n  c.language,\n  COUNT(*) AS total_views,\n  ROUND(SUM(e.minutes_watched), 0) AS total_minutes\nFROM streaming_events e\nLEFT JOIN content c\n  ON e.content_id = c.content_id\nGROUP BY c.language\nORDER BY total_minutes DESC;\n\n\n\n2 records\n\n\nlanguage\ntotal_views\ntotal_minutes\n\n\n\n\nSpanish\n14698\n692790\n\n\nEnglish\n2884\n135611\n\n\n\n\n\n\n\n\n\n\nCode\nWITH user_watch_language AS (\n  SELECT\n    e.user_id,\n    c.language,\n    SUM(e.minutes_watched) AS total_minutes\n  FROM streaming_events e\n  LEFT JOIN content c\n    ON e.content_id = c.content_id\n  GROUP BY 1,2\n),\n\ndominant_language AS (\n  SELECT *\n  FROM (\n    SELECT *,\n           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total_minutes DESC) AS rn\n    FROM user_watch_language\n  )\n  WHERE rn = 1\n)\n\nSELECT\n  u.preferred_language,\n  d.language AS dominant_watch_language,\n  COUNT(*) AS users\nFROM dominant_language d\nJOIN users u\n  ON d.user_id = u.user_id\nGROUP BY 1,2\nORDER BY users DESC;\n\n\n\n4 records\n\n\npreferred_language\ndominant_watch_language\nusers\n\n\n\n\nSpanish\nSpanish\n1850\n\n\nEnglish\nSpanish\n305\n\n\nEnglish\nEnglish\n305\n\n\nSpanish\nEnglish\n30"
+  },
+  {
+    "objectID": "insights.html",
+    "href": "insights.html",
+    "title": "Insights",
+    "section": "",
+    "text": "Telemundo content is available on Peacock (SVOD).\nThe objective is to evaluate how Spanish-language content drives:\n\nAcquisition quality (early engagement signals)\nEngagement depth and behavior\nRetention and churn (subscription durability)"
+  },
+  {
+    "objectID": "exploration.html#validate-tables-and-keys",
+    "href": "exploration.html#validate-tables-and-keys",
+    "title": "Exploration",
+    "section": "",
+    "text": "library(DBI)\nlibrary(duckdb)\nlibrary(readxl)\n\ncon &lt;- dbConnect(duckdb::duckdb(), dbdir = \"telemundo.duckdb\")\n\n\nusers &lt;- read_excel(\"data/users.xlsx\")\nsubscriptions &lt;- read_excel(\"data/subscriptions.xlsx\")\nstreaming_events &lt;- read_excel(\"data/streaming_events.xlsx\")\ncontent &lt;- read_excel(\"data/content.xlsx\")\n\ndbWriteTable(con, \"users\", users, overwrite = TRUE)\ndbWriteTable(con, \"subscriptions\", subscriptions, overwrite = TRUE)\ndbWriteTable(con, \"streaming_events\", streaming_events, overwrite = TRUE)\ndbWriteTable(con, \"content\", content, overwrite = TRUE)"
+  },
+  {
+    "objectID": "exploration.html#what-columns-do-i-have",
+    "href": "exploration.html#what-columns-do-i-have",
+    "title": "Exploration",
+    "section": "",
+    "text": "Code\nDESCRIBE users;\n\n\n\n4 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nsignup_date\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\npreferred_language\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nacquisition_channel\nVARCHAR\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE subscriptions;\n\n\n\n4 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nsubscription_start\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nsubscription_end\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nchurn_flag\nBOOLEAN\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE streaming_events;\n\n\n\n5 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\nuser_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ncontent_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\nwatch_start\nTIMESTAMP\nYES\nNA\nNA\nNA\n\n\nminutes_watched\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ncompleted_flag\nBOOLEAN\nYES\nNA\nNA\nNA\n\n\n\n\n\n\n\nCode\nDESCRIBE content;\n\n\n\n5 records\n\n\ncolumn_name\ncolumn_type\nnull\nkey\ndefault\nextra\n\n\n\n\ncontent_id\nDOUBLE\nYES\nNA\nNA\nNA\n\n\ntitle\nVARCHAR\nYES\nNA\nNA\nNA\n\n\ngenre\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nlanguage\nVARCHAR\nYES\nNA\nNA\nNA\n\n\nrelease_date\nTIMESTAMP\nYES\nNA\nNA\nNA"
+  },
+  {
+    "objectID": "exploration.html#validate-tables-and-keys-1",
+    "href": "exploration.html#validate-tables-and-keys-1",
+    "title": "Exploration",
+    "section": "",
+    "text": "-- Confirm row counts and distinct users\nSELECT 'users' AS table_name,\n       COUNT(*) AS rows,\n       COUNT(DISTINCT user_id) AS distinct_users\nFROM users\n\nUNION ALL\n\nSELECT 'streaming_events',\n       COUNT(*),\n       COUNT(DISTINCT user_id)\nFROM streaming_events\n\nUNION ALL\n\nSELECT 'subscriptions',\n       COUNT(*),\n       COUNT(DISTINCT user_id)\nFROM subscriptions;\n\n\n3 records\n\n\ntable_name\nrows\ndistinct_users\n\n\n\n\nusers\n2500\n2500\n\n\nstreaming_events\n17582\n2490\n\n\nsubscriptions\n2500\n2500"
+  },
+  {
+    "objectID": "exploration.html#quick-peek-at-sample-rows-to-confirm-column-names-formats",
+    "href": "exploration.html#quick-peek-at-sample-rows-to-confirm-column-names-formats",
+    "title": "Exploration",
+    "section": "",
+    "text": "Code\nSELECT * FROM users LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\nsignup_date\npreferred_language\nacquisition_channel\n\n\n\n\n1\n2025-03-08\nSpanish\nCRM Re-engagement\n\n\n2\n2025-01-18\nSpanish\nPaid Social\n\n\n3\n2025-03-25\nSpanish\nCRM Re-engagement\n\n\n4\n2025-02-27\nSpanish\nPaid Search\n\n\n5\n2025-03-28\nSpanish\nOrganic\n\n\n\n\n\n\n\nCode\nSELECT * FROM subscriptions LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\nsubscription_start\nsubscription_end\nchurn_flag\n\n\n\n\n1\n2025-03-08\nNA\nFALSE\n\n\n2\n2025-01-18\nNA\nFALSE\n\n\n3\n2025-03-25\nNA\nFALSE\n\n\n4\n2025-02-27\nNA\nFALSE\n\n\n5\n2025-03-28\nNA\nFALSE\n\n\n\n\n\n\n\nCode\nSELECT * FROM streaming_events LIMIT 5;\n\n\n\n5 records\n\n\nuser_id\ncontent_id\nwatch_start\nminutes_watched\ncompleted_flag\n\n\n\n\n1\n101\n2025-03-22\n61\nTRUE\n\n\n1\n105\n2025-03-09\n51\nFALSE\n\n\n1\n102\n2025-04-12\n28\nFALSE\n\n\n1\n107\n2025-03-27\n62\nTRUE\n\n\n1\n105\n2025-03-13\n89\nTRUE\n\n\n\n\n\n\n\nCode\nSELECT * FROM content LIMIT 5;\n\n\n\n5 records\n\n\ncontent_id\ntitle\ngenre\nlanguage\nrelease_date\n\n\n\n\n101\nLa Reina del Sur\nDrama\nSpanish\n2024-01-01\n\n\n102\nCaso Cerrado\nReality\nSpanish\n2024-01-31\n\n\n103\nEl Senor de los Cielos\nDrama\nSpanish\n2024-03-01\n\n\n104\nLa Casa de los Famosos\nReality\nSpanish\n2024-03-31\n\n\n105\nNoticias Telemundo\nNews\nSpanish\n2024-04-30"
+  },
+  {
+    "objectID": "exploration.html#early-spanish-exposure-first-7-days-after-signup",
+    "href": "exploration.html#early-spanish-exposure-first-7-days-after-signup",
+    "title": "Exploration",
+    "section": "",
+    "text": "Users are flagged as “Spanish Early” if they watched Spanish-language content within 7 days of signup (minimum 2 minutes watched).\n\nWITH base_users AS (\n  SELECT \n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  LEFT JOIN content c\n    ON e.content_id = c.content_id\n)\n\nSELECT\n  b.user_id,\n  CASE \n    WHEN COUNT(ev.user_id) &gt; 0 THEN 1 \n    ELSE 0 \n  END AS spanish_early_flag\nFROM base_users b\nLEFT JOIN events_enriched ev\n  ON ev.user_id = b.user_id\n AND ev.watch_date BETWEEN b.signup_date \n                       AND b.signup_date + INTERVAL 6 DAY\n AND ev.language = 'Spanish'\n AND ev.minutes_watched &gt;= 2\nGROUP BY 1\nLIMIT 20;\n\n\nDisplaying records 1 - 10\n\n\nuser_id\nspanish_early_flag\n\n\n\n\n1079\n1\n\n\n1261\n1\n\n\n1350\n1\n\n\n1367\n1\n\n\n1425\n1\n\n\n1497\n1\n\n\n1718\n1\n\n\n1735\n1\n\n\n1850\n1\n\n\n2007\n1"
+  },
+  {
+    "objectID": "exploration.html#day-retention",
+    "href": "exploration.html#day-retention",
+    "title": "Exploration",
+    "section": "",
+    "text": "Retention is defined as having an active subscription on Day 30 (i.e., subscription started before Day 30 and has not ended).\n\nWITH base_users AS (\n  SELECT \n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nretention_30 AS (\n  SELECT\n    b.user_id,\n    CASE\n      WHEN s.subscription_start &lt;= b.signup_date + INTERVAL 30 DAY\n       AND (s.subscription_end IS NULL \n            OR s.subscription_end &gt; b.signup_date + INTERVAL 30 DAY)\n      THEN 1\n      ELSE 0\n    END AS retained_30d\n  FROM base_users b\n  LEFT JOIN subscriptions s\n    ON b.user_id = s.user_id\n)\n\nSELECT\n  COUNT(*) AS users,\n  AVG(retained_30d) AS retention_rate_30d\nFROM retention_30;\n\n\n1 records\n\n\nusers\nretention_rate_30d\n\n\n\n\n2500\n0.9164"
+  },
+  {
+    "objectID": "exploration.html#day-churn-comparison",
+    "href": "exploration.html#day-churn-comparison",
+    "title": "Exploration",
+    "section": "",
+    "text": "This compares churn rates at 60 days between: - Users with early Spanish exposure - Users without early Spanish exposure\n\nWITH base_users AS (\n  SELECT \n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  LEFT JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_flag AS (\n  SELECT\n    b.user_id,\n    b.signup_date,\n    CASE \n      WHEN COUNT(ev.user_id) &gt; 0 THEN 1 \n      ELSE 0 \n    END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date \n                         AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n),\n\nchurn_60 AS (\n  SELECT\n    f.user_id,\n    f.spanish_early,\n    CASE\n      WHEN s.subscription_start &lt;= f.signup_date + INTERVAL 60 DAY\n       AND (s.subscription_end IS NULL \n            OR s.subscription_end &gt; f.signup_date + INTERVAL 60 DAY)\n      THEN 0\n      ELSE 1\n    END AS churn_60d\n  FROM spanish_flag f\n  LEFT JOIN subscriptions s\n    ON f.user_id = s.user_id\n)\n\nSELECT\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(churn_60d) AS churn_rate_60d\nFROM churn_60\nGROUP BY 1;\n\n\n2 records\n\n\nspanish_early\nusers\nchurn_rate_60d\n\n\n\n\n0\n1323\n0.3265306\n\n\n1\n1177\n0.1580289"
+  },
+  {
+    "objectID": "exploration.html#variable-level-distribution",
+    "href": "exploration.html#variable-level-distribution",
+    "title": "Exploration",
+    "section": "",
+    "text": "Before retention analysis, we inspect categorical variables to understand base composition and potential confounders.\n\n\n\n\nCode\nSELECT \n  preferred_language,\n  COUNT(*) AS users,\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users\nFROM users\nGROUP BY preferred_language\nORDER BY users DESC;\n\n\n\n2 records\n\n\npreferred_language\nusers\npct_users\n\n\n\n\nSpanish\n1880\n75.2\n\n\nEnglish\n620\n24.8\n\n\n\n\n\n\n\n\n\n\nCode\n-- percentage of total users that came from each acquisition channel\nSELECT \n  acquisition_channel,\n  COUNT(*) AS users,\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_users\nFROM users\nGROUP BY acquisition_channel\nORDER BY users DESC;\n\n\n\n5 records\n\n\nacquisition_channel\nusers\npct_users\n\n\n\n\nCRM Re-engagement\n525\n21.00\n\n\nAffiliate\n520\n20.80\n\n\nPaid Search\n493\n19.72\n\n\nPaid Social\n482\n19.28\n\n\nOrganic\n480\n19.20\n\n\n\n\n\n\n\n\n\n\nCode\nSELECT \n  language,\n  COUNT(*) AS titles\nFROM content\nGROUP BY language\nORDER BY titles DESC;\n\n\n\n2 records\n\n\nlanguage\ntitles\n\n\n\n\nSpanish\n8\n\n\nEnglish\n2\n\n\n\n\n\n\n\n\n\n\nCode\nSELECT \n  c.language,\n  COUNT(*) AS total_views,\n  ROUND(SUM(e.minutes_watched), 0) AS total_minutes\nFROM streaming_events e\nLEFT JOIN content c\n  ON e.content_id = c.content_id\nGROUP BY c.language\nORDER BY total_minutes DESC;\n\n\n\n2 records\n\n\nlanguage\ntotal_views\ntotal_minutes\n\n\n\n\nSpanish\n14698\n692790\n\n\nEnglish\n2884\n135611\n\n\n\n\n\n\n\n\n\n\nCode\nWITH user_watch_language AS (\n  SELECT\n    e.user_id,\n    c.language,\n    SUM(e.minutes_watched) AS total_minutes\n  FROM streaming_events e\n  LEFT JOIN content c\n    ON e.content_id = c.content_id\n  GROUP BY 1,2\n),\n\ndominant_language AS (\n  SELECT *\n  FROM (\n    SELECT *,\n           ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY total_minutes DESC) AS rn\n    FROM user_watch_language\n  )\n  WHERE rn = 1\n)\n\nSELECT\n  u.preferred_language,\n  d.language AS dominant_watch_language,\n  COUNT(*) AS users\nFROM dominant_language d\nJOIN users u\n  ON d.user_id = u.user_id\nGROUP BY 1,2\nORDER BY users DESC;\n\n\n\n4 records\n\n\npreferred_language\ndominant_watch_language\nusers\n\n\n\n\nSpanish\nSpanish\n1850\n\n\nEnglish\nSpanish\n305\n\n\nEnglish\nEnglish\n305\n\n\nSpanish\nEnglish\n30"
+  },
+  {
+    "objectID": "insights.html#load-data",
+    "href": "insights.html#load-data",
+    "title": "Insights",
+    "section": "",
+    "text": "library(DBI)\nlibrary(duckdb)\nlibrary(readxl)\n\ncon &lt;- dbConnect(duckdb::duckdb(), dbdir = \"telemundo.duckdb\")\n\n# Install + load ICU extension (fixes Quarto render errors on macOS)\ndbExecute(con, \"INSTALL icu;\")\n\n[1] 0\n\ndbExecute(con, \"LOAD icu;\")\n\n[1] 0\n\n\n\nusers &lt;- read_excel(\"data/users.xlsx\")\nsubscriptions &lt;- read_excel(\"data/subscriptions.xlsx\")\nstreaming_events &lt;- read_excel(\"data/streaming_events.xlsx\")\ncontent &lt;- read_excel(\"data/content.xlsx\")\n\ndbWriteTable(con, \"users\", users, overwrite = TRUE)\ndbWriteTable(con, \"subscriptions\", subscriptions, overwrite = TRUE)\ndbWriteTable(con, \"streaming_events\", streaming_events, overwrite = TRUE)\ndbWriteTable(con, \"content\", content, overwrite = TRUE)"
+  },
+  {
+    "objectID": "insights.html#cohort-logic",
+    "href": "insights.html#cohort-logic",
+    "title": "Insights",
+    "section": "Cohort Logic",
+    "text": "Cohort Logic\nUsers who watched Spanish-language content within their first 7 days post-signup:\n\nExposure window: Day 0–6 after signup_date\nSpanish content only\n≥ 2 minutes watched"
+  },
+  {
+    "objectID": "insights.html#retention-definition",
+    "href": "insights.html#retention-definition",
+    "title": "Insights",
+    "section": "Retention Definition",
+    "text": "Retention Definition\n30-day retention = subscription active on Day 30:\n\nsubscription_start &lt;= signup_date + 30 days AND\nsubscription_end IS NULL OR subscription_end &gt; signup_date + 30 days"
+  },
+  {
+    "objectID": "insights.html#sql-30-day-retention-for-spanish-early-cohort",
+    "href": "insights.html#sql-30-day-retention-for-spanish-early-cohort",
+    "title": "Insights",
+    "section": "SQL (30-day retention for Spanish-early cohort)",
+    "text": "SQL (30-day retention for Spanish-early cohort)\n\n\nCode\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.signup_date,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n),\n\nret30 AS (\n  SELECT\n    f.user_id,\n    f.spanish_early,\n    CASE\n      WHEN s.subscription_start &lt;= f.signup_date + INTERVAL 30 DAY\n       AND (s.subscription_end IS NULL OR s.subscription_end &gt; f.signup_date + INTERVAL 30 DAY)\n      THEN 1 ELSE 0\n    END AS retained_30d\n  FROM spanish_early_flag f\n  LEFT JOIN subscriptions s\n    ON s.user_id = f.user_id\n)\n\nSELECT\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(retained_30d) AS retention_30d\nFROM ret30\nGROUP BY 1\nORDER BY 1;\n\n\n\n2 records\n\n\nspanish_early\nusers\nretention_30d\n\n\n\n\n0\n1323\n0.8881330\n\n\n1\n1177\n0.9481733\n\n\n\n\n\nResult Interpretation\nEarly Spanish exposure is associated with higher 30-day retention:\n\nSpanish-early: 94.8%\nNon-Spanish-early: 88.8%\n+6.0pp retention lift"
+  },
+  {
+    "objectID": "insights.html#key-behavioral-variables-28-day-window",
+    "href": "insights.html#key-behavioral-variables-28-day-window",
+    "title": "Insights",
+    "section": "Key behavioral variables (28-day window)",
+    "text": "Key behavioral variables (28-day window)\n\nActive days: number of distinct days watched\nTotal minutes watched\nTitles watched: distinct titles\nGenre breadth: distinct genres\nCompletion rate: % of events completed\nSpanish share: % of minutes from Spanish-language content\nRecency: days since last watch"
+  },
+  {
+    "objectID": "insights.html#segments-logic-business-value",
+    "href": "insights.html#segments-logic-business-value",
+    "title": "Insights",
+    "section": "Segments (logic + business value)",
+    "text": "Segments (logic + business value)\n\nSuperfans\n\nThreshold: Active days &gt;= 12 AND minutes &gt;= 1200 (28d)\nValue: highest retention/LTV; prioritize premium tentpoles + exclusives\n\nHabitual Engagers\n\nThreshold: Active days 6–11 OR minutes 600–1199\nValue: strong growth lever; improve “continue watching” + personalized rails\n\nBingers\n\nThreshold: Active days &lt;= 5 AND minutes &gt;= 900\nValue: churn risk after series completion; optimize next-best-series sequencing\n\nSpanish-First Loyalists\n\nThreshold: Spanish share &gt;= 0.70 AND active days &gt;= 6\nValue: validates Telemundo as retention anchor; invest in Spanish originals/franchises\n\nBrowsers / Samplers\n\nThreshold: titles &gt;= 8 AND minutes &lt; 600\nValue: acquisition funnel; guided discovery + starter packs improves habit formation\n\nAt-Risk / Fading\n\nThreshold: recency &gt;= 14 OR steep decline vs prior period (if available)\nValue: immediate intervention; win-back messaging + re-entry UX\n\n\n\nWITH events_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    e.completed_flag,\n    c.title,\n    c.genre,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nanchor AS (\n  SELECT MAX(watch_date) AS anchor_date\n  FROM events_enriched\n),\n\nfeatures_28d AS (\n  SELECT\n    ev.user_id,\n    COUNT(DISTINCT ev.watch_date) AS active_days_28d,\n    SUM(ev.minutes_watched) AS minutes_28d,\n    COUNT(DISTINCT ev.title) AS titles_28d,\n    COUNT(DISTINCT ev.genre) AS genres_28d,\n    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,\n    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0\n      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d,\n    (a.anchor_date - MAX(ev.watch_date)) AS recency_days\n  FROM events_enriched ev\n  CROSS JOIN anchor a\n  WHERE ev.watch_date BETWEEN a.anchor_date - INTERVAL 27 DAY AND a.anchor_date\n  GROUP BY ev.user_id, a.anchor_date\n),\n\nsegmented AS (\n  SELECT\n    *,\n    CASE\n      WHEN recency_days &gt;= 14 THEN 'At-Risk / Fading'\n      WHEN spanish_share_28d &gt;= 0.70 AND active_days_28d &gt;= 6 THEN 'Spanish-First Loyalists'\n      WHEN active_days_28d &gt;= 12 AND minutes_28d &gt;= 1200 THEN 'Superfans'\n      WHEN active_days_28d &lt;= 5 AND minutes_28d &gt;= 900 THEN 'Bingers'\n      WHEN titles_28d &gt;= 8 AND minutes_28d &lt; 600 THEN 'Browsers / Samplers'\n      WHEN active_days_28d &gt;= 6 OR minutes_28d &gt;= 600 THEN 'Habitual Engagers'\n      ELSE 'Casual'\n    END AS engagement_segment\n  FROM features_28d\n)\n\nSELECT\n  engagement_segment,\n  COUNT(*) AS users,\n  AVG(active_days_28d) AS avg_active_days,\n  AVG(minutes_28d) AS avg_minutes,\n  AVG(spanish_share_28d) AS avg_spanish_share,\n  AVG(completion_rate_28d) AS avg_completion_rate,\n  AVG(recency_days) AS avg_recency_days\nFROM segmented\nGROUP BY 1\nORDER BY users DESC;\n\n\n4 records\n\n\n\n\n\n\n\n\n\n\n\nengagement_segment\nusers\navg_active_days\navg_minutes\navg_spanish_share\navg_completion_rate\navg_recency_days\n\n\n\n\nAt-Risk / Fading\n334\n1.733533\n88.49102\n0.8000833\n0.4033291\n20.946108\n\n\nCasual\n228\n3.000000\n149.14474\n0.8405729\n0.3754386\n7.973684\n\n\nSpanish-First Loyalists\n22\n6.181818\n285.31818\n0.8998372\n0.3116883\n5.363636\n\n\nHabitual Engagers\n1\n6.000000\n249.00000\n0.5742972\n0.1250000\n2.000000"
+  },
+  {
+    "objectID": "insights.html#analytical-approach",
+    "href": "insights.html#analytical-approach",
+    "title": "Insights",
+    "section": "Analytical approach",
+    "text": "Analytical approach\n\nDefine treatment: “Spanish Early” = watched Spanish-language content in first 7 days after signup.\nDefine outcome: churn_flag (from subscriptions table) and/or churn-by-day-N (e.g., inactive at day 60).\nQuantify relationship:\n\nUnadjusted: difference in churn rates between Spanish Early vs not.\nStratified: compare within preferred_language and acquisition_channel to reduce confounding.\n\nLimitations: self-selection, catalog mix, and marketing channel effects.\nNext steps: propensity adjustment and A/B test (Spanish-first onboarding merchandising).\n\n\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1\n)\n\nSELECT\n  f.spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1\nORDER BY 1;\n\n\n2 records\n\n\nspanish_early\nusers\nchurn_rate\n\n\n\n\n0\n1323\n0.4111867\n\n\n1\n1177\n0.1996602\n\n\n\n\n\n\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date,\n    preferred_language\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.preferred_language,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n)\n\nSELECT\n  preferred_language,\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s ON f.user_id = s.user_id\nGROUP BY 1,2\nORDER BY 1,2;\n\n\n4 records\n\n\npreferred_language\nspanish_early\nusers\nchurn_rate\n\n\n\n\nEnglish\n0\n488\n0.4200820\n\n\nEnglish\n1\n132\n0.2121212\n\n\nSpanish\n0\n835\n0.4059880\n\n\nSpanish\n1\n1045\n0.1980861\n\n\n\n\n\n\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date,\n    acquisition_channel\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.acquisition_channel,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n)\n\nSELECT\n  acquisition_channel,\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s ON f.user_id = s.user_id\nGROUP BY 1,2\nORDER BY 1,2;\n\n\nDisplaying records 1 - 10\n\n\nacquisition_channel\nspanish_early\nusers\nchurn_rate\n\n\n\n\nAffiliate\n0\n284\n0.4119718\n\n\nAffiliate\n1\n236\n0.2161017\n\n\nCRM Re-engagement\n0\n263\n0.3840304\n\n\nCRM Re-engagement\n1\n262\n0.2290076\n\n\nOrganic\n0\n255\n0.4392157\n\n\nOrganic\n1\n225\n0.1644444\n\n\nPaid Search\n0\n265\n0.3924528\n\n\nPaid Search\n1\n228\n0.1842105\n\n\nPaid Social\n0\n256\n0.4296875\n\n\nPaid Social\n1\n226\n0.1991150"
+  },
+  {
+    "objectID": "insights.html#limitations-confounders",
+    "href": "insights.html#limitations-confounders",
+    "title": "Insights",
+    "section": "Limitations & confounders",
+    "text": "Limitations & confounders\n\nSelf-selection: users who choose Spanish content early may have higher intent and would retain regardless.\nCatalog mix: Spanish titles outnumber English titles, increasing Spanish exposure mechanically.\nAcquisition effects: channels may attract different intent users (even if volume is balanced).\nMeasurement limits: churn_flag is an observed outcome but may not capture pauses, household sharing, or re-subs.\nNon-causal inference: observational comparison cannot confirm incrementality."
+  },
+  {
+    "objectID": "insights.html#recommended-next-steps",
+    "href": "insights.html#recommended-next-steps",
+    "title": "Insights",
+    "section": "Recommended next steps",
+    "text": "Recommended next steps\n\nA/B test Spanish-first onboarding\n\nIncrease Spanish rails, Telemundo starter packs, and culturally aligned recommendations for new users.\n\nPropensity / matching adjustment\n\nControl for preferred_language, acquisition_channel, and early engagement volume.\n\nUplift targeting\n\nIdentify who gets the most incremental retention benefit from Spanish-first merchandising."
+  },
+  {
+    "objectID": "insights.html#setup-data-load",
+    "href": "insights.html#setup-data-load",
+    "title": "Insights",
+    "section": "",
+    "text": "This document uses DuckDB inside R/Quarto to demonstrate SQL-first analytical logic."
+  },
+  {
+    "objectID": "insights.html#joins-data-model",
+    "href": "insights.html#joins-data-model",
+    "title": "Insights",
+    "section": "Joins (Data Model)",
+    "text": "Joins (Data Model)\n\nUser-level attributes\nusers.user_id is the user grain.\nSubscription outcomes\nsubscriptions.user_id = users.user_id\nUsed for retention/churn definitions based on subscription activity.\nViewing behavior + content metadata\nstreaming_events.user_id = users.user_id\nstreaming_events.content_id = content.content_id"
+  },
+  {
+    "objectID": "insights.html#spanish-language-content-definition",
+    "href": "insights.html#spanish-language-content-definition",
+    "title": "Insights",
+    "section": "Spanish-language content definition",
+    "text": "Spanish-language content definition\nSpanish-language content is defined using the content dimension:\n\ncontent.language = 'Spanish'"
+  },
+  {
+    "objectID": "insights.html#minimum-meaningful-engagement-filter",
+    "href": "insights.html#minimum-meaningful-engagement-filter",
+    "title": "Insights",
+    "section": "Minimum meaningful engagement filter",
+    "text": "Minimum meaningful engagement filter\nTo reduce accidental starts, Spanish exposure requires:\n\nminutes_watched &gt;= 2\n\n(Assumption: &lt;2 minutes likely represents an accidental click or quick exit.)"
+  },
+  {
+    "objectID": "insights.html#retention-definition-30-day",
+    "href": "insights.html#retention-definition-30-day",
+    "title": "Insights",
+    "section": "Retention definition (30-day)",
+    "text": "Retention definition (30-day)\n30-day retention is defined as subscription active on Day 30 after signup:\n\nsubscription_start &lt;= signup_date + 30 days AND\nsubscription_end is NULL or subscription_end &gt; signup_date + 30 days\n\n\nThis measures subscription durability (SVOD business outcome), not merely streaming activity."
+  },
+  {
+    "objectID": "insights.html#sql-construct-cohort-and-compute-30-day-retention",
+    "href": "insights.html#sql-construct-cohort-and-compute-30-day-retention",
+    "title": "Insights",
+    "section": "SQL — Construct cohort and compute 30-day retention",
+    "text": "SQL — Construct cohort and compute 30-day retention"
+  },
+  {
+    "objectID": "insights.html#goal",
+    "href": "insights.html#goal",
+    "title": "Insights",
+    "section": "Goal",
+    "text": "Goal\nSegment Hispanic streaming viewers by engagement behavior to inform:\n\ncontent strategy (what to invest in),\nproduct merchandising (how to surface content),\nretention interventions (who to target and when)."
+  },
+  {
+    "objectID": "insights.html#behavioral-variables-first-28-days-post-signup",
+    "href": "insights.html#behavioral-variables-first-28-days-post-signup",
+    "title": "Insights",
+    "section": "Behavioral variables (first 28 days post-signup)",
+    "text": "Behavioral variables (first 28 days post-signup)\nTo ensure a consistent and comparable window for all users, features are calculated in the first 28 days after signup:\n\nactive_days_28d: distinct watch days (frequency)\nminutes_28d: total minutes watched (depth)\ntitles_28d: distinct titles watched (breadth)\ngenres_28d: distinct genres watched (diversity)\ncompletion_rate_28d: completion share (content satisfaction proxy)\nspanish_share_28d: share of minutes on Spanish content (affinity)"
+  },
+  {
+    "objectID": "insights.html#segment-logic-business-value",
+    "href": "insights.html#segment-logic-business-value",
+    "title": "Insights",
+    "section": "Segment logic + business value",
+    "text": "Segment logic + business value\n\nSuperfans: high frequency and high depth\nValue: highest LTV; prioritize franchise tentpoles and exclusives.\nHabitual Engagers: consistent users building habit\nValue: growth lever; improve continue-watching and personalized rails.\nBingers: high depth, low frequency\nValue: risk after series completion; optimize next-best-series sequencing.\nSpanish-First Loyalists: high Spanish share and consistent activity\nValue: validates Telemundo as retention anchor; invest in Spanish originals/franchises.\nBrowsers / Samplers: high breadth, low depth\nValue: onboarding/merchandising opportunity; curated starter packs.\nNo Engagement (0–28d): no viewing in onboarding window\nValue: acquisition-quality problem; reactivation messaging and onboarding UX."
+  },
+  {
+    "objectID": "insights.html#sql-build-features-first-28-days-post-signup-assign-segments",
+    "href": "insights.html#sql-build-features-first-28-days-post-signup-assign-segments",
+    "title": "Insights",
+    "section": "SQL — Build features (first 28 days post-signup) + assign segments",
+    "text": "SQL — Build features (first 28 days post-signup) + assign segments\n\n\nCode\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    e.completed_flag,\n    c.title,\n    c.genre,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nfeatures_28d AS (\n  SELECT\n    b.user_id,\n    COUNT(DISTINCT ev.watch_date) AS active_days_28d,\n    SUM(ev.minutes_watched) AS minutes_28d,\n    COUNT(DISTINCT ev.title) AS titles_28d,\n    COUNT(DISTINCT ev.genre) AS genres_28d,\n    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,\n    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0\n      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 27 DAY\n  GROUP BY 1\n),\n\nsegmented AS (\n  SELECT\n    *,\n    CASE\n      WHEN minutes_28d IS NULL OR minutes_28d = 0 THEN 'No Engagement (0–28d)'\n      WHEN spanish_share_28d &gt;= 0.70 AND active_days_28d &gt;= 6 THEN 'Spanish-First Loyalists'\n      WHEN active_days_28d &gt;= 12 AND minutes_28d &gt;= 1200 THEN 'Superfans'\n      WHEN active_days_28d &lt;= 5 AND minutes_28d &gt;= 900 THEN 'Bingers'\n      WHEN titles_28d &gt;= 8 AND minutes_28d &lt; 600 THEN 'Browsers / Samplers'\n      WHEN active_days_28d &gt;= 6 OR minutes_28d &gt;= 600 THEN 'Habitual Engagers'\n      ELSE 'Casual'\n    END AS engagement_segment\n  FROM features_28d\n)\n\nSELECT\n  engagement_segment,\n  COUNT(*) AS users,\n  AVG(active_days_28d) AS avg_active_days,\n  AVG(minutes_28d) AS avg_minutes,\n  AVG(spanish_share_28d) AS avg_spanish_share,\n  AVG(completion_rate_28d) AS avg_completion_rate\nFROM segmented\nGROUP BY 1\nORDER BY users DESC;\n\n\n\n4 records\n\n\n\n\n\n\n\n\n\n\nengagement_segment\nusers\navg_active_days\navg_minutes\navg_spanish_share\navg_completion_rate\n\n\n\n\nCasual\n2084\n2.866123\n141.7524\n0.7962273\n0.3953244\n\n\nSpanish-First Loyalists\n238\n6.621849\n326.7185\n0.9170555\n0.3847084\n\n\nNo Engagement (0–28d)\n152\n0.000000\nNA\nNA\n0.0000000\n\n\nHabitual Engagers\n26\n6.461538\n330.8846\n0.6044571\n0.4068529\n\n\n\n\n\nAssumption (thresholds): Segment thresholds are illustrative and should be calibrated against real platform distributions and business targets."
+  },
+  {
+    "objectID": "insights.html#treatment-and-outcome",
+    "href": "insights.html#treatment-and-outcome",
+    "title": "Insights",
+    "section": "Treatment and outcome",
+    "text": "Treatment and outcome\n\nTreatment (Spanish Early): watched Spanish content in first 7 days post-signup (&gt;=2 minutes)\nOutcome: subscriptions.churn_flag (observed churn indicator)"
+  },
+  {
+    "objectID": "insights.html#quantify-the-relationship",
+    "href": "insights.html#quantify-the-relationship",
+    "title": "Insights",
+    "section": "Quantify the relationship",
+    "text": "Quantify the relationship\n\nUnadjusted churn rates (Spanish Early vs not)\n\n\nCode\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1\n)\n\nSELECT\n  f.spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1\nORDER BY 1;\n\n\n\n2 records\n\n\nspanish_early\nusers\nchurn_rate\n\n\n\n\n0\n1323\n0.4111867\n\n\n1\n1177\n0.1996602\n\n\n\n\n\n\n\nStratified check (reduce confounding)\nBecause early Spanish viewing can correlate with user preference and channel quality, we compare churn rates within key strata.\n\nBy preferred language\n\n\nCode\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date,\n    preferred_language\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.preferred_language,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n)\n\nSELECT\n  preferred_language,\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1,2\nORDER BY 1,2;\n\n\n\n4 records\n\n\npreferred_language\nspanish_early\nusers\nchurn_rate\n\n\n\n\nEnglish\n0\n488\n0.4200820\n\n\nEnglish\n1\n132\n0.2121212\n\n\nSpanish\n0\n835\n0.4059880\n\n\nSpanish\n1\n1045\n0.1980861\n\n\n\n\n\n\n\nBy acquisition channel\n\n\nCode\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date,\n    acquisition_channel\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.acquisition_channel,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n)\n\nSELECT\n  acquisition_channel,\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1,2\nORDER BY 1,2;\n\n\n\nDisplaying records 1 - 10\n\n\nacquisition_channel\nspanish_early\nusers\nchurn_rate\n\n\n\n\nAffiliate\n0\n284\n0.4119718\n\n\nAffiliate\n1\n236\n0.2161017\n\n\nCRM Re-engagement\n0\n263\n0.3840304\n\n\nCRM Re-engagement\n1\n262\n0.2290076\n\n\nOrganic\n0\n255\n0.4392157\n\n\nOrganic\n1\n225\n0.1644444\n\n\nPaid Search\n0\n265\n0.3924528\n\n\nPaid Search\n1\n228\n0.1842105\n\n\nPaid Social\n0\n256\n0.4296875\n\n\nPaid Social\n1\n226\n0.1991150"
+  },
+  {
+    "objectID": "insights.html#limitations-confounders-important",
+    "href": "insights.html#limitations-confounders-important",
+    "title": "Insights",
+    "section": "Limitations & confounders (important)",
+    "text": "Limitations & confounders (important)\n\nSelf-selection bias: users who choose Spanish content early may already have higher intent and would retain regardless.\nCatalog mix bias: Spanish titles are the majority of the catalog, increasing Spanish exposure mechanically.\nAcquisition differences: channels may bring different intent users even if volumes are balanced.\nOutcome definition: churn_flag may not reflect pauses, re-subs, or shared-household behavior.\nNon-causal inference: observed differences do not confirm incrementality."
+  },
+  {
+    "objectID": "insights.html#close-connection",
+    "href": "insights.html#close-connection",
+    "title": "Insights",
+    "section": "Close Connection",
+    "text": "Close Connection\n\n\nCode\ndbDisconnect(con, shutdown = TRUE)"
+  },
+  {
+    "objectID": "exploration.html#load-data",
+    "href": "exploration.html#load-data",
+    "title": "Exploration",
+    "section": "",
+    "text": "Code\nusers &lt;- read_excel(\"data/users.xlsx\")\nsubscriptions &lt;- read_excel(\"data/subscriptions.xlsx\")\nstreaming_events &lt;- read_excel(\"data/streaming_events.xlsx\")\ncontent &lt;- read_excel(\"data/content.xlsx\")\n\ndbWriteTable(con, \"users\", users, overwrite = TRUE)\ndbWriteTable(con, \"subscriptions\", subscriptions, overwrite = TRUE)\ndbWriteTable(con, \"streaming_events\", streaming_events, overwrite = TRUE)\ndbWriteTable(con, \"content\", content, overwrite = TRUE)"
+  },
+  {
+    "objectID": "insights.html#table-joins",
+    "href": "insights.html#table-joins",
+    "title": "Insights",
+    "section": "Table Joins",
+    "text": "Table Joins\n\nusers.user_id is the user-level grain.\nsubscriptions.user_id = users.user_id\nstreaming_events.user_id = users.user_id\nstreaming_events.content_id = content.content_id"
+  },
+  {
+    "objectID": "insights.html#spanish-content-definition",
+    "href": "insights.html#spanish-content-definition",
+    "title": "Insights",
+    "section": "Spanish Content Definition",
+    "text": "Spanish Content Definition\nSpanish-language content is defined as:\ncontent.language = 'Spanish'\nMinimum meaningful exposure:\nminutes_watched &gt;= 2\n(Assumption: &lt;2 minutes likely accidental playback.)"
+  },
+  {
+    "objectID": "insights.html#day-post-signup-window",
+    "href": "insights.html#day-post-signup-window",
+    "title": "Insights",
+    "section": "28-Day Post-Signup Window",
+    "text": "28-Day Post-Signup Window\nAll features calculated within:\nsignup_date → signup_date + 27 days"
+  },
+  {
+    "objectID": "insights.html#behavioral-features",
+    "href": "insights.html#behavioral-features",
+    "title": "Insights",
+    "section": "Behavioral Features",
+    "text": "Behavioral Features\n\nactive_days_28d\nminutes_28d\ntitles_28d\ngenres_28d\ncompletion_rate_28d\nspanish_share_28d"
+  },
+  {
+    "objectID": "insights.html#sql-build-features-assign-segments",
+    "href": "insights.html#sql-build-features-assign-segments",
+    "title": "Insights",
+    "section": "SQL: Build Features + Assign Segments",
+    "text": "SQL: Build Features + Assign Segments\n\n\nCode\nWITH base_users AS (\n  SELECT user_id, CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    e.completed_flag,\n    c.title,\n    c.genre,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nfeatures_28d AS (\n  SELECT\n    b.user_id,\n    COUNT(DISTINCT ev.watch_date) AS active_days_28d,\n    SUM(ev.minutes_watched) AS minutes_28d,\n    COUNT(DISTINCT ev.title) AS titles_28d,\n    COUNT(DISTINCT ev.genre) AS genres_28d,\n    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,\n    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0\n      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 27 DAY\n  GROUP BY 1\n),\n\nsegmented AS (\n  SELECT *,\n    CASE\n      WHEN minutes_28d IS NULL OR minutes_28d = 0 THEN 'No Engagement (0–28d)'\n      WHEN spanish_share_28d &gt;= 0.70 AND active_days_28d &gt;= 6 THEN 'Spanish-First Loyalists'\n      WHEN active_days_28d &gt;= 12 AND minutes_28d &gt;= 1200 THEN 'Superfans'\n      WHEN active_days_28d &lt;= 5 AND minutes_28d &gt;= 900 THEN 'Bingers'\n      WHEN titles_28d &gt;= 8 AND minutes_28d &lt; 600 THEN 'Browsers / Samplers'\n      WHEN active_days_28d &gt;= 6 OR minutes_28d &gt;= 600 THEN 'Habitual Engagers'\n      ELSE 'Casual'\n    END AS engagement_segment\n  FROM features_28d\n)\n\nSELECT\n  engagement_segment,\n  COUNT(*) AS users,\n  AVG(minutes_28d) AS avg_minutes,\n  AVG(spanish_share_28d) AS avg_spanish_share\nFROM segmented\nGROUP BY 1\nORDER BY users DESC;\n\n\n\n4 records\n\n\nengagement_segment\nusers\navg_minutes\navg_spanish_share\n\n\n\n\nCasual\n2084\n141.7524\n0.7962273\n\n\nSpanish-First Loyalists\n238\n326.7185\n0.9170555\n\n\nNo Engagement (0–28d)\n152\nNA\nNA\n\n\nHabitual Engagers\n26\n330.8846\n0.6044571\n\n\n\n\n\nBusiness Value\nSegmentation enables:\n\nFranchise prioritization (Superfans)\nNext-best-series sequencing (Bingers)\nSpanish-first investment validation (Spanish-First Loyalists)\nOnboarding optimization (No Engagement)"
+  },
+  {
+    "objectID": "insights.html#treatment",
+    "href": "insights.html#treatment",
+    "title": "Insights",
+    "section": "Treatment",
+    "text": "Treatment\nWatched Spanish content in first 7 days (≥2 minutes)."
+  },
+  {
+    "objectID": "insights.html#outcome",
+    "href": "insights.html#outcome",
+    "title": "Insights",
+    "section": "Outcome",
+    "text": "Outcome\nsubscriptions.churn_flag"
+  },
+  {
+    "objectID": "insights.html#sql-unadjusted-churn-comparison",
+    "href": "insights.html#sql-unadjusted-churn-comparison",
+    "title": "Insights",
+    "section": "SQL: Unadjusted Churn Comparison",
+    "text": "SQL: Unadjusted Churn Comparison\n\n\nCode\nWITH base_users AS (\n  SELECT user_id, CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1\n)\n\nSELECT\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1\nORDER BY 1;\n\n\n\n2 records\n\n\nspanish_early\nusers\nchurn_rate\n\n\n\n\n0\n1323\n0.4111867\n\n\n1\n1177\n0.1996602\n\n\n\n\n\nObserved Outcome\n\nNon-Spanish-early churn: 41.1%\nSpanish-early churn: 20.0%\n−21.1pp absolute reduction\n~51% relative reduction"
+  },
+  {
+    "objectID": "insights.html#success-durable-subscription-value",
+    "href": "insights.html#success-durable-subscription-value",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Success = Durable Subscription Value",
+    "text": "Success = Durable Subscription Value\nTelemundo content should drive:\n\nHigh early engagement (first 7 days)\nStronger 30-day retention\nLower churn\nCross-language appeal beyond Spanish-preferred users\nRepeat viewing across genres (habit formation)\n\nSuccess is not just viewership — it is subscription durability."
+  },
+  {
+    "objectID": "insights.html#early-spanish-engagement-predicts-retention",
+    "href": "insights.html#early-spanish-engagement-predicts-retention",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Early Spanish Engagement Predicts Retention",
+    "text": "Early Spanish Engagement Predicts Retention\n\n\n94.8% vs 88.8% retention\n+6pp retention lift for Spanish-early viewers"
+  },
+  {
+    "objectID": "insights.html#telemundo-content-is-a-retention-lever",
+    "href": "insights.html#telemundo-content-is-a-retention-lever",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Telemundo Content Is a Retention Lever",
+    "text": "Telemundo Content Is a Retention Lever\nSpanish-language content:\n\nAnchors onboarding behavior\nSignals high-intent subscribers\nBuilds early habit formation\nRetains both Spanish- and English-preferred users\n\nTelemundo should be treated as a core retention asset, not just a content vertical."
+  },
+  {
+    "objectID": "insights.html#spanish-first-onboarding-experiment",
+    "href": "insights.html#spanish-first-onboarding-experiment",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "1️⃣ Spanish-First Onboarding Experiment",
+    "text": "1️⃣ Spanish-First Onboarding Experiment\n\nIncrease Spanish rails for new users\nSurface Telemundo franchises in first-session UX\nTest impact on 30-day retention"
+  },
+  {
+    "objectID": "insights.html#personalization-optimization",
+    "href": "insights.html#personalization-optimization",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "2️⃣ Personalization Optimization",
+    "text": "2️⃣ Personalization Optimization\n\nBuild “Spanish-First Loyalist” signal into ranking\nImprove post-binge next-best-series sequencing"
+  },
+  {
+    "objectID": "insights.html#measure-incrementality",
+    "href": "insights.html#measure-incrementality",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "3️⃣ Measure Incrementality",
+    "text": "3️⃣ Measure Incrementality\n\nRun A/B test on merchandising\nControl for acquisition channel and language preference\nQuantify incremental retention lift"
+  },
+  {
+    "objectID": "insights.html#success-subscription-durability",
+    "href": "insights.html#success-subscription-durability",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Success = Subscription Durability",
+    "text": "Success = Subscription Durability\nTelemundo content should:\n\nDrive early engagement (first 7 days)\nIncrease 30-day retention\nReduce churn\nBuild repeat viewing habit\nExtend value beyond Spanish-preferred users\n\nSuccess is not just viewership —\nit is measurable impact on retention and lifetime value."
+  },
+  {
+    "objectID": "insights.html#action-plan",
+    "href": "insights.html#action-plan",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Action Plan",
+    "text": "Action Plan\n1️⃣ Run Spanish-first onboarding A/B test\nIncrease visibility of Telemundo content in first-session UX.\n2️⃣ Optimize merchandising for new users\nSurface high-retention franchises and starter packs.\n3️⃣ Measure incrementality\nQuantify retention lift controlling for channel and language.\nObjective: Maximize durable subscription value through early Spanish engagement."
+  },
+  {
+    "objectID": "insights.html#telemundo-success-subscription-durability",
+    "href": "insights.html#telemundo-success-subscription-durability",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Telemundo Success = Subscription Durability",
+    "text": "Telemundo Success = Subscription Durability\nTelemundo content should:\n\nDrive strong early engagement (first 7 days)\nIncrease 30-day retention\nReduce churn\nBuild repeat viewing habit\nExtend value beyond Spanish-preferred users\n\nSuccess is not just viewership —\nit is measurable impact on subscriber lifetime value."
+  },
+  {
+    "objectID": "insights.html#early-spanish-engagement-drives-retention",
+    "href": "insights.html#early-spanish-engagement-drives-retention",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Early Spanish Engagement Drives Retention",
+    "text": "Early Spanish Engagement Drives Retention\nUsers who watched Spanish-language content within 7 days:\n\n94.8% 30-day retention\nvs 88.8% for others\n\n+6pp retention lift\n\nChurn:\n\n20.0%\nvs 41.1%\n~50% lower churn\n\nEffect persists across preferred language and acquisition channel."
+  },
+  {
+    "objectID": "insights.html#telemundo-is-a-retention-lever",
+    "href": "insights.html#telemundo-is-a-retention-lever",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Telemundo Is a Retention Lever",
+    "text": "Telemundo Is a Retention Lever\nSpanish-language engagement:\n\nAnchors onboarding behavior\nSignals high-intent subscribers\nBuilds early habit formation\nRetains both Spanish- and English-preferred users\n\nTelemundo should be treated as a core retention asset, not just a content vertical."
+  },
+  {
+    "objectID": "analysis.html",
+    "href": "analysis.html",
+    "title": "Analysis",
+    "section": "",
+    "text": "Telemundo content is available on Peacock (SVOD).\nThe objective is to evaluate how Spanish-language content drives:\n\nAcquisition quality (early engagement signals)\nEngagement depth and behavior\nRetention and churn (subscription durability)"
+  },
+  {
+    "objectID": "analysis.html#table-joins",
+    "href": "analysis.html#table-joins",
+    "title": "Analysis",
+    "section": "Table Joins",
+    "text": "Table Joins\n\nusers.user_id is the user-level grain.\nsubscriptions.user_id = users.user_id\nstreaming_events.user_id = users.user_id\nstreaming_events.content_id = content.content_id"
+  },
+  {
+    "objectID": "analysis.html#spanish-content-definition",
+    "href": "analysis.html#spanish-content-definition",
+    "title": "Analysis",
+    "section": "Spanish Content Definition",
+    "text": "Spanish Content Definition\nSpanish-language content is defined as:\ncontent.language = 'Spanish'\nMinimum meaningful exposure:\nminutes_watched &gt;= 2\n(Assumption: &lt;2 minutes likely accidental playback.)"
+  },
+  {
+    "objectID": "analysis.html#cohort-logic",
+    "href": "analysis.html#cohort-logic",
+    "title": "Analysis",
+    "section": "Cohort Logic",
+    "text": "Cohort Logic\nUsers who watched Spanish-language content within their first 7 days post-signup:\n\nExposure window: Day 0–6 after signup_date\nSpanish content only\n≥ 2 minutes watched"
+  },
+  {
+    "objectID": "analysis.html#retention-definition",
+    "href": "analysis.html#retention-definition",
+    "title": "Analysis",
+    "section": "Retention Definition",
+    "text": "Retention Definition\n30-day retention = subscription active on Day 30:\n\nsubscription_start &lt;= signup_date + 30 days AND\nsubscription_end IS NULL OR subscription_end &gt; signup_date + 30 days"
+  },
+  {
+    "objectID": "analysis.html#sql-30-day-retention-for-spanish-early-cohort",
+    "href": "analysis.html#sql-30-day-retention-for-spanish-early-cohort",
+    "title": "Analysis",
+    "section": "SQL (30-day retention for Spanish-early cohort)",
+    "text": "SQL (30-day retention for Spanish-early cohort)\n\n\nCode\n-- selecting user and signup date\nWITH base_users AS (\n  SELECT\n    user_id,\n    CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\n-- streaming events left join content by content id\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    b.signup_date,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1,2\n),\n\nret30 AS (\n  SELECT\n    f.user_id,\n    f.spanish_early,\n    CASE\n      WHEN s.subscription_start &lt;= f.signup_date + INTERVAL 30 DAY\n       AND (s.subscription_end IS NULL OR s.subscription_end &gt; f.signup_date + INTERVAL 30 DAY)\n      THEN 1 ELSE 0\n    END AS retained_30d\n  FROM spanish_early_flag f\n  LEFT JOIN subscriptions s\n    ON s.user_id = f.user_id\n)\n\nSELECT\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(retained_30d) AS retention_30d\nFROM ret30\nGROUP BY 1\nORDER BY 1;\n\n\n\n2 records\n\n\nspanish_early\nusers\nretention_30d\n\n\n\n\n0\n1323\n0.8881330\n\n\n1\n1177\n0.9481733\n\n\n\n\n\nResult Interpretation\nEarly Spanish exposure is associated with higher 30-day retention:\n\nSpanish-early: 94.8%\nNon-Spanish-early: 88.8%\n+6.0pp retention lift"
+  },
+  {
+    "objectID": "analysis.html#day-post-signup-window",
+    "href": "analysis.html#day-post-signup-window",
+    "title": "Analysis",
+    "section": "28-Day Post-Signup Window",
+    "text": "28-Day Post-Signup Window\nAll features calculated within:\nsignup_date → signup_date + 27 days"
+  },
+  {
+    "objectID": "analysis.html#behavioral-features",
+    "href": "analysis.html#behavioral-features",
+    "title": "Analysis",
+    "section": "Behavioral Features",
+    "text": "Behavioral Features\n\nactive_days_28d\nminutes_28d\ntitles_28d\ngenres_28d\ncompletion_rate_28d\nspanish_share_28d"
+  },
+  {
+    "objectID": "analysis.html#sql-build-features-assign-segments",
+    "href": "analysis.html#sql-build-features-assign-segments",
+    "title": "Analysis",
+    "section": "SQL: Build Features + Assign Segments",
+    "text": "SQL: Build Features + Assign Segments\n\n\nCode\nWITH base_users AS (\n  SELECT user_id, CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    e.completed_flag,\n    c.title,\n    c.genre,\n    c.language\n  FROM streaming_events e\n  JOIN content c\n    ON e.content_id = c.content_id\n),\n\nfeatures_28d AS (\n  SELECT\n    b.user_id,\n    COUNT(DISTINCT ev.watch_date) AS active_days_28d,\n    SUM(ev.minutes_watched) AS minutes_28d,\n    COUNT(DISTINCT ev.title) AS titles_28d,\n    COUNT(DISTINCT ev.genre) AS genres_28d,\n    AVG(CASE WHEN ev.completed_flag THEN 1 ELSE 0 END) AS completion_rate_28d,\n    SUM(CASE WHEN ev.language='Spanish' THEN ev.minutes_watched ELSE 0 END) * 1.0\n      / NULLIF(SUM(ev.minutes_watched), 0) AS spanish_share_28d\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 27 DAY\n  GROUP BY 1\n),\n\nsegmented AS (\n  SELECT *,\n    CASE\n      WHEN minutes_28d IS NULL OR minutes_28d = 0 THEN 'No Engagement (0–28d)'\n      WHEN spanish_share_28d &gt;= 0.70 AND active_days_28d &gt;= 6 THEN 'Spanish-First Loyalists'\n      WHEN active_days_28d &gt;= 12 AND minutes_28d &gt;= 1200 THEN 'Superfans'\n      WHEN active_days_28d &lt;= 5 AND minutes_28d &gt;= 900 THEN 'Bingers'\n      WHEN titles_28d &gt;= 8 AND minutes_28d &lt; 600 THEN 'Browsers / Samplers'\n      WHEN active_days_28d &gt;= 6 OR minutes_28d &gt;= 600 THEN 'Habitual Engagers'\n      ELSE 'Casual'\n    END AS engagement_segment\n  FROM features_28d\n)\n\nSELECT\n  engagement_segment,\n  COUNT(*) AS users,\n  AVG(minutes_28d) AS avg_minutes,\n  AVG(spanish_share_28d) AS avg_spanish_share\nFROM segmented\nGROUP BY 1\nORDER BY users DESC;\n\n\n\n4 records\n\n\nengagement_segment\nusers\navg_minutes\navg_spanish_share\n\n\n\n\nCasual\n2084\n141.7524\n0.7962273\n\n\nSpanish-First Loyalists\n238\n326.7185\n0.9170555\n\n\nNo Engagement (0–28d)\n152\nNA\nNA\n\n\nHabitual Engagers\n26\n330.8846\n0.6044571\n\n\n\n\n\nBusiness Value\nSegmentation enables:\n\nFranchise prioritization (Superfans)\nNext-best-series sequencing (Bingers)\nSpanish-first investment validation (Spanish-First Loyalists)\nOnboarding optimization (No Engagement)"
+  },
+  {
+    "objectID": "analysis.html#treatment",
+    "href": "analysis.html#treatment",
+    "title": "Analysis",
+    "section": "Treatment",
+    "text": "Treatment\nWatched Spanish content in first 7 days (≥2 minutes)."
+  },
+  {
+    "objectID": "analysis.html#outcome",
+    "href": "analysis.html#outcome",
+    "title": "Analysis",
+    "section": "Outcome",
+    "text": "Outcome\nsubscriptions.churn_flag"
+  },
+  {
+    "objectID": "analysis.html#sql-unadjusted-churn-comparison",
+    "href": "analysis.html#sql-unadjusted-churn-comparison",
+    "title": "Analysis",
+    "section": "SQL: Unadjusted Churn Comparison",
+    "text": "SQL: Unadjusted Churn Comparison\n\n\nCode\nWITH base_users AS (\n  SELECT user_id, CAST(signup_date AS DATE) AS signup_date\n  FROM users\n),\n\nevents_enriched AS (\n  SELECT\n    e.user_id,\n    CAST(e.watch_start AS DATE) AS watch_date,\n    e.minutes_watched,\n    c.language\n  FROM streaming_events e\n  JOIN content c ON e.content_id = c.content_id\n),\n\nspanish_early_flag AS (\n  SELECT\n    b.user_id,\n    CASE WHEN COUNT(ev.user_id) &gt; 0 THEN 1 ELSE 0 END AS spanish_early\n  FROM base_users b\n  LEFT JOIN events_enriched ev\n    ON ev.user_id = b.user_id\n   AND ev.watch_date BETWEEN b.signup_date AND b.signup_date + INTERVAL 6 DAY\n   AND ev.language = 'Spanish'\n   AND ev.minutes_watched &gt;= 2\n  GROUP BY 1\n)\n\nSELECT\n  spanish_early,\n  COUNT(*) AS users,\n  AVG(CASE WHEN s.churn_flag THEN 1 ELSE 0 END) AS churn_rate\nFROM spanish_early_flag f\nJOIN subscriptions s\n  ON f.user_id = s.user_id\nGROUP BY 1\nORDER BY 1;\n\n\n\n2 records\n\n\nspanish_early\nusers\nchurn_rate\n\n\n\n\n0\n1323\n0.4111867\n\n\n1\n1177\n0.1996602\n\n\n\n\n\nObserved Outcome\n\nNon-Spanish-early churn: 41.1%\nSpanish-early churn: 20.0%\n−21.1pp absolute reduction\n~51% relative reduction"
+  },
+  {
+    "objectID": "analysis.html#close-connection",
+    "href": "analysis.html#close-connection",
+    "title": "Insights",
+    "section": "Close Connection",
+    "text": "Close Connection\n\n\nCode\ndbDisconnect(con, shutdown = TRUE)"
+  },
+  {
+    "objectID": "insights.html#spanish-early-engagement-lower-churn",
+    "href": "insights.html#spanish-early-engagement-lower-churn",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Spanish Early Engagement = Lower Churn",
+    "text": "Spanish Early Engagement = Lower Churn\nSpanish-language content:\n\n\n20.0% vs 41.1% churn\n~50% lower churn among Spanish-early users\nPattern holds across preferred language and acquisition channel"
+  },
+  {
+    "objectID": "insights.html#most-important-insight",
+    "href": "insights.html#most-important-insight",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Most Important Insight",
+    "text": "Most Important Insight\nEarly Spanish Engagement Predicts Retention\n\n\n\n\n\n\n\n\n\n\n94.8% vs 88.8% retention\n+6pp retention lift for Spanish-early viewers"
+  },
+  {
+    "objectID": "insights.html#what-defines-success-for-telemundo-on-peacock",
+    "href": "insights.html#what-defines-success-for-telemundo-on-peacock",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "What Defines Success for Telemundo on Peacock",
+    "text": "What Defines Success for Telemundo on Peacock\nSuccess = Subscription Durability\nTelemundo content must:\n\nDrive early engagement (first 7 days)\nIncrease 30-day retention\nReduce churn\nBuild durable viewing habit\n\nSuccess is not viewership alone —\nit is measurable impact on retention and lifetime value."
+  },
+  {
+    "objectID": "insights.html#churn-reduction",
+    "href": "insights.html#churn-reduction",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "Churn Reduction",
+    "text": "Churn Reduction\nSpanish Early Engagement = Lower Churn\nSpanish-language content:\n\n\n\n\n\n\n\n\n\n\n20.0% vs 41.1% churn\n~50% lower churn among Spanish-early users\nPattern holds across preferred language and acquisition channel"
+  },
+  {
+    "objectID": "insights.html#what-we-should-prioritize-next-quarter",
+    "href": "insights.html#what-we-should-prioritize-next-quarter",
+    "title": "Telemundo on Peacock — Executive Summary",
+    "section": "What We Should Prioritize Next Quarter",
+    "text": "What We Should Prioritize Next Quarter\nAction Plan\n1. Run Spanish-first onboarding A/B test\nIncrease visibility of Telemundo content in first-session UX.\n2. Optimize merchandising for new users\nSurface high-retention franchises and starter packs.\n3. Measure incrementality\nQuantify retention lift controlling for channel and language.\nObjective: Maximize durable subscription value through early Spanish engagement."
+  }
+]
