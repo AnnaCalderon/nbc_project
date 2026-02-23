@@ -1,8 +1,9 @@
 project:
   type: website
+  output-dir: docs
 
 website:
-  title: "nbc_project"
+  title: "NBC Assessment"
   navbar:
     left:
       - href: insights.qmd

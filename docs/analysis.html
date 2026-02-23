@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Analysis – nbc_project</title>
+<title>Analysis – NBC Assessment</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -115,7 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">nbc_project</span>
+    <span class="navbar-title">NBC Assessment</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -197,21 +197,12 @@ The objective is to evaluate how <strong>Spanish-language content</strong> drive
 </section>
 <section id="data-model-definitions" class="level1">
 <h1>Data Model &amp; Definitions</h1>
-<section id="table-joins" class="level2">
-<h2 class="anchored" data-anchor-id="table-joins">Table Joins</h2>
-<ul>
-<li><code>users.user_id</code> is the user-level grain.</li>
-<li><code>subscriptions.user_id = users.user_id</code></li>
-<li><code>streaming_events.user_id = users.user_id</code></li>
-<li><code>streaming_events.content_id = content.content_id</code></li>
-</ul>
-</section>
 <section id="spanish-content-definition" class="level2">
 <h2 class="anchored" data-anchor-id="spanish-content-definition">Spanish Content Definition</h2>
 <p>Spanish-language content is defined as:</p>
 <pre><code>content.language = 'Spanish'</code></pre>
 <p>Minimum meaningful exposure:</p>
-<pre><code>- minutes_watched &gt;= 2</code></pre>
+<pre><code>minutes_watched &gt;= 2</code></pre>
 <p>(Assumption: &lt;2 minutes likely accidental playback.)</p>
 </section>
 </section>
