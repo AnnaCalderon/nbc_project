@@ -174,6 +174,10 @@ document.addEventListener("DOMContentLoaded", function () {
     <a class="nav-link" href="./exploration.html"> 
 <span class="menu-text">Exploration</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./insights_code.html"> 
+<span class="menu-text">Code Insights</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -603,8 +607,8 @@ Attaching package: 'dplyr'</code></pre>
 <pre><code># A tibble: 3 × 5
   cluster users avg_minutes avg_active_days avg_spanish_share
   &lt;fct&gt;   &lt;int&gt;       &lt;dbl&gt;           &lt;dbl&gt;             &lt;dbl&gt;
-1 1         369        51.4            1.19            0.0469
-2 2         956       266.             5.19            0.882 
+1 1         956       266.             5.19            0.882 
+2 2         369        51.4            1.19            0.0469
 3 3        1175       114.             2.43            0.895 </code></pre>
 </div>
 </div>
@@ -762,9 +766,9 @@ They contribute little watch time and exhibit weaker alignment with core Telemun
 <pre><code># A tibble: 3 × 7
   cluster_name     users pct_users avg_minutes avg_active_days avg_spanish_share
   &lt;fct&gt;            &lt;int&gt; &lt;chr&gt;           &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt;            
-1 Spanish Power U…   369 15%              51.4             1.2 5%               
+1 Spanish Power U…   956 38%             266.              5.2 88%              
 2 Spanish-Light U…  1175 47%             114.              2.4 90%              
-3 English-First /…   956 38%             266.              5.2 88%              
+3 English-First /…   369 15%              51.4             1.2 5%               
 # ℹ 1 more variable: total_minutes &lt;dbl&gt;</code></pre>
 </div>
 </div>
@@ -782,9 +786,9 @@ They contribute little watch time and exhibit weaker alignment with core Telemun
 <pre><code># A tibble: 3 × 8
   cluster_name     users pct_users avg_minutes avg_active_days avg_spanish_share
   &lt;fct&gt;            &lt;int&gt; &lt;chr&gt;           &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt;            
-1 Spanish Power U…   369 15%              51.4             1.2 5%               
+1 Spanish Power U…   956 38%             266.              5.2 88%              
 2 Spanish-Light U…  1175 47%             114.              2.4 90%              
-3 English-First /…   956 38%             266.              5.2 88%              
+3 English-First /…   369 15%              51.4             1.2 5%               
 # ℹ 2 more variables: total_minutes &lt;dbl&gt;, pct_total_minutes &lt;chr&gt;</code></pre>
 </div>
 <details open="" class="code-fold">
@@ -831,8 +835,8 @@ They contribute little watch time and exhibit weaker alignment with core Telemun
   cluster_name            users retention_30d
   &lt;chr&gt;                   &lt;int&gt; &lt;chr&gt;        
 1 Spanish-Light Users      1175 92%          
-2 Spanish Power Users       956 92%          
-3 English-First / At-Risk   369 89%          </code></pre>
+2 English-First / At-Risk   956 92%          
+3 Spanish Power Users       369 89%          </code></pre>
 </div>
 </div>
 <hr>

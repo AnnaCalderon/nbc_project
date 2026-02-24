@@ -1,20 +1,15 @@
 ---
-title: "Telemundo on Peacock — Executive Summary"
+title: "insights_code"
 format:
-  revealjs:
-    theme: simple
-    slide-number: true
-    transition: fade
-    css: styles.css
-    center: true
-    width: 1280
-    height: 720
-    auto-stretch: false
-execute:
-  echo: false
-  message: false
-  warning: false
+  html:
+    theme: cosmo
+    code-fold: show
+    code-tools: false
+    toc: false
+    toc-depth: 3
+include-in-header: expand-all.html
 ---
+
 
 
 ```{r include=FALSE, message=FALSE, warning=FALSE}
@@ -150,7 +145,7 @@ cluster_profile <- read_csv("data/cluster_profile.csv") %>%
   ) %>%
   mutate(
     cluster_name = recode(cluster_name,
-      "English-First / At-Risk" = "English-Dominant Users"
+      "English-First / At-Risk" = "Low-Engagement Users"
     )
   ) %>%
   mutate(

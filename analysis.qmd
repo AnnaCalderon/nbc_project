@@ -308,6 +308,8 @@ LEFT JOIN retention_user_30d r
 features <- dbReadTable(con, "features_30d")
 ```
 
+
+
 ```{r}
 library(dplyr)
 library(cluster)

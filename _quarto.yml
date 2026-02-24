@@ -12,6 +12,8 @@ website:
         text: Analysis
       - href: exploration.qmd
         text: Exploration
+      - href: insights_code.qmd
+        text: Code Insights
 
 format:
   html:
