@@ -150,7 +150,7 @@ cluster_profile <- read_csv("data/cluster_profile.csv") %>%
   ) %>%
   mutate(
     cluster_name = recode(cluster_name,
-      "English-First / At-Risk" = "English-Dominant Users"
+      "English-First / At-Risk" = "Low-Engagement Users"
     )
   ) %>%
   mutate(
