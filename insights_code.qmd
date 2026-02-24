@@ -144,15 +144,17 @@ cluster_profile <- read_csv("data/cluster_profile.csv") %>%
     pct_total_minutes = as.numeric(sub("%","", pct_total_minutes)) / 100
   ) %>%
   mutate(
-    cluster_name = recode(cluster_name,
-      "English-First / At-Risk" = "Low-Engagement Users"
+    cluster_name = case_when(
+      cluster_name == "English-First / At-Risk" ~ "Spanish Power Users",
+      cluster_name == "Spanish Power Users" ~ "Spanish-Light Users",
+      cluster_name == "Spanish-Light Users" ~ "Low-Engagement Users"
     )
   ) %>%
   mutate(
     cluster_name = factor(cluster_name, levels = c(
       "Spanish Power Users",
       "Spanish-Light Users",
-      "English-Dominant Users"
+      "Low-Engagement Users"
     ))
   )
 
